@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+/*
+  Okay, Now What? design tokens.
+  One confident accent (deep teal), quiet neutrals, and muted status colors used only on pills.
+  The app is light only, by design.
+*/
+:root {
+  --bg: #ffffff;
+  --surface: #f6f8f7;
+  --surface-strong: #eef2f0;
+  --border: #e3e8e5;
+  --border-strong: #cdd5d1;
+  --ink: #13201c;
+  --ink-muted: #56635e;
+  --ink-faint: #8a9590;
+
+  --accent: #0f766e;
+  --accent-hover: #0d5f59;
+  --accent-soft: #e5f3f0;
+  --accent-ink: #0b4f4a;
+
+  --ok: #15803d;
+  --ok-soft: #e9f7ee;
+  --watch: #a15c07;
+  --watch-soft: #fdf3e1;
+  --risk: #b42318;
+  --risk-soft: #fdeeec;
+
+  /* Charts: accent first, then a cool neutral and a warm contrast. */
+  --chart-1: #0f766e;
+  --chart-2: #94a3b8;
+  --chart-3: #d97706;
+  --chart-grid: #e8ecea;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-watch: var(--watch);
+  --color-watch-soft: var(--watch-soft);
+  --color-risk: var(--risk);
+  --color-risk-soft: var(--risk-soft);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --text-display: 2rem;
+  --text-display--line-height: 1.2;
+  --text-display--letter-spacing: -0.02em;
+  --text-title: 1.375rem;
+  --text-title--line-height: 1.3;
+  --text-title--letter-spacing: -0.01em;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
