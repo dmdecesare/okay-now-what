@@ -12,7 +12,8 @@
     "db:reset": "tsx scripts/seed.ts",
     "check:health": "tsx scripts/check-health.ts",
     "check:copy": "tsx scripts/check-copy.ts",
-    "check": "npm run typecheck && npm run lint && npm run check:copy"
+    "check": "npm run typecheck && npm run lint && npm run check:copy",
+    "check:leaks": "tsx scripts/check-leaks.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.10",

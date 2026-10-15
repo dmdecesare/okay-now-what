@@ -35,3 +35,15 @@ A few lines per session. This feeds pages 5 and 6 of the PDF.
 - Premium request spend is under a tenth of seat spend, so its 18% drop disappeared in a stacked chart. Claude split it into its own chart so the drop is obvious.
 **Anything that surprised me about Claude:**
 **Screenshot to capture for the PDF:** Book of business with the Needs attention panel; Bluestone's Adoption tab (peak 84%, claims team down 41 points); Bluestone's Spend tab.
+
+## Session 3: Phase 3, customer app and milestone sync (2026-10-15)
+
+**Date and time spent:**
+**What I asked Claude Code to do:** Plan and build the customer onboarding app (all eight tabs), private links, and milestone check-off that syncs both ways with the rep view.
+**What worked on the first try:** Two-way sync. Checking off a milestone as the customer updated the rep's plan, overdue count, and health signals.
+**What broke and how we fixed it:**
+- My leak checker flagged every customer page for "dollar amounts." They turned out to be internal markers in the page data, not prices. Claude narrowed the check so it still catches real leaks.
+- Team names and counts swapped sides on phones. Claude simplified the layout.
+- One setup step told the customer their usage was falling, which felt like rep-only insight. Claude reworded it.
+**Anything that surprised me about Claude:** It thought about my demo: opening a customer link as the rep would have reset Elena's "quiet for 22 days" signal, so it added a rep preview mode.
+**Screenshot to capture for the PDF:** Customer Plan tab with checkboxes; Bluestone's customer home ("Welcome, Elena"); the rep Plan tab showing "Done by the customer".

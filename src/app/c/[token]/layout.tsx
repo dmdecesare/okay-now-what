@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { Wordmark } from "@/components/wordmark";
-import { getCustomer } from "./data";
+import { CustomerTabNav } from "@/components/customer/tab-nav";
+import { VisitTracker } from "@/components/customer/visit-tracker";
+import { LiveRefresh } from "@/components/live-refresh";
+import { getCustomerView } from "@/db/queries";
 
 export const metadata: Metadata = {
   title: "Copilot onboarding",
@@ -13,13 +16,9 @@ export const metadata: Metadata = {
 export default function CustomerLayout({ children, params }: LayoutProps<"/c/[token]">) {
   return (
     <>
-      <header className="border-b border-border bg-accent-soft">
-        <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
-          <Suspense fallback={<div className="h-8 w-72 animate-pulse rounded bg-white/60" />}>
-            <CustomerHeading params={params} />
-          </Suspense>
-        </div>
-      </header>
+      <Suspense fallback={<HeaderSkeleton />}>
+        <CustomerHeader params={params} />
+      </Suspense>
 
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6">{children}</main>
 
@@ -33,17 +32,35 @@ export default function CustomerLayout({ children, params }: LayoutProps<"/c/[to
   );
 }
 
-async function CustomerHeading({ params }: { params: LayoutProps<"/c/[token]">["params"] }) {
+async function CustomerHeader({ params }: { params: LayoutProps<"/c/[token]">["params"] }) {
   await connection();
   const { token } = await params;
-  const customer = await getCustomer(token);
+  const customer = await getCustomerView(token);
 
   return (
-    <div>
-      <p className="text-sm font-medium text-accent-ink">Onboarding</p>
-      <h1 className="text-title font-semibold sm:text-display">
-        {customer ? `${customer.name} x Copilot onboarding` : "Copilot onboarding"}
-      </h1>
-    </div>
+    <header className="border-b border-border bg-accent-soft">
+      {customer && <VisitTracker token={token} />}
+      {customer && <LiveRefresh />}
+      <div className="mx-auto max-w-5xl space-y-4 px-4 pt-6 pb-3 sm:px-6">
+        <div>
+          <p className="text-sm font-medium text-accent-ink">Onboarding</p>
+          <h1 className="text-title font-semibold sm:text-display">
+            {customer ? `${customer.name} x Copilot onboarding` : "Copilot onboarding"}
+          </h1>
+        </div>
+        {customer && <CustomerTabNav token={token} />}
+      </div>
+    </header>
+  );
+}
+
+function HeaderSkeleton() {
+  return (
+    <header className="border-b border-border bg-accent-soft">
+      <div className="mx-auto max-w-5xl space-y-4 px-4 pt-6 pb-3 sm:px-6">
+        <div className="h-14 w-80 max-w-full animate-pulse rounded bg-white/60" />
+        <div className="h-8 animate-pulse rounded bg-white/60" />
+      </div>
+    </header>
   );
 }

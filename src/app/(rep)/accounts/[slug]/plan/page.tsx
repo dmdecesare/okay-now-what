@@ -2,7 +2,9 @@ import { Suspense } from "react";
 import { Card } from "@/components/ui/card";
 import { ProgressBar, Stat } from "@/components/ui/metrics";
 import { TabSkeleton } from "@/components/account/tab-skeleton";
-import { MilestoneList, displayStatus } from "@/components/account/milestone-list";
+import { MilestoneChecklist } from "@/components/milestone-checklist";
+import { setMilestoneDoneAsRep } from "@/app/actions/milestones";
+import { displayStatus, toChecklist } from "@/lib/milestones";
 import { SuccessCriteriaList } from "@/components/account/success-criteria";
 import { todayISO } from "@/lib/dates";
 import { loadAccount } from "../load";
@@ -55,7 +57,12 @@ async function Plan({ params }: { params: PageProps<"/accounts/[slug]/plan">["pa
           <h2 className="font-semibold">Milestones</h2>
           <p className="text-sm text-ink-muted">Synced with what the customer checks off.</p>
         </div>
-        <MilestoneList milestones={milestones} today={today} />
+        <MilestoneChecklist
+          milestones={milestones.map(toChecklist)}
+          today={today}
+          viewer="rep"
+          onToggle={setMilestoneDoneAsRep.bind(null, account.slug)}
+        />
       </Card>
     </div>
   );

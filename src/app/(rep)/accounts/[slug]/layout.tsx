@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { getAccountDetail } from "@/db/queries";
 import { AccountTabNav } from "@/components/account/tab-nav";
 import { ShareButton } from "@/components/account/share-button";
+import { LiveRefresh } from "@/components/live-refresh";
 import { StageBadge, StatusPill } from "@/components/ui/badges";
 import { daysBetween, todayISO } from "@/lib/dates";
 import { formatNumber } from "@/lib/format";
@@ -34,6 +35,8 @@ async function AccountHeader({ params }: { params: LayoutProps<"/accounts/[slug]
 
   return (
     <header className="space-y-5">
+      {/* Picks up customer check-offs and visits without a manual reload. */}
+      <LiveRefresh />
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-3">

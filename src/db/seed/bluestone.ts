@@ -150,7 +150,7 @@ export const bluestone: SeedAccount = {
       {
         id: "premium-budget",
         title: "Check premium request budgets",
-        why: "Premium request use is falling, which usually means agent mode and Chat use are dropping too.",
+        why: "Premium requests power agent mode and Chat. A budget set too low can quietly block teams that want to use them.",
         steps: [
           "Review premium request usage by team in billing",
           "Make sure budgets aren't blocking teams that want to use agent mode",

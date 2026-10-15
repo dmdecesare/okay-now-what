@@ -23,7 +23,13 @@ export function ShareButton({ token }: { token: string }) {
       <Button type="button" size="sm" onClick={copy} aria-live="polite">
         {copied ? "Link copied" : "Copy customer link"}
       </Button>
-      <a href={path} target="_blank" rel="noopener" className={buttonClasses("secondary", "sm")}>
+      {/* Preview mode: the rep's own visit doesn't count as a champion visit. */}
+      <a
+        href={`${path}?preview=1`}
+        target="_blank"
+        rel="noopener"
+        className={buttonClasses("secondary", "sm")}
+      >
         Open customer view
       </a>
     </div>

@@ -8,7 +8,9 @@ import {
   type InsightContent,
   type InsightKind,
   type Stage,
+  type TeamUsage,
 } from "@/lib/schemas";
+import { toChecklist, type ChecklistMilestone } from "@/lib/milestones";
 import { getDb } from "./client";
 import {
   accountProfiles,
@@ -212,9 +214,9 @@ export const getAccountDetail = cache(async (slug: string): Promise<AccountDetai
 
 /**
  * What the customer app is allowed to see. Built field by field so internal data
- * (health, risk, spend, deal notes, questions view) can't leak by accident.
+ * (health, risk, spend, insights, questions, deal notes, rep notes) can't leak by accident.
  */
-export type CustomerAccount = {
+export type CustomerView = {
   name: string;
   industry: string;
   seats: number;
@@ -227,11 +229,17 @@ export type CustomerAccount = {
     goals: { goal: string }[];
     champion: { name: string | null; title: string };
   };
+  milestones: ChecklistMilestone[];
+  usage: { date: string; activeSeats: number; teams: TeamUsage[] }[];
 };
 
-export async function getCustomerAccountByToken(token: string): Promise<CustomerAccount | null> {
-  // Tokens are 32 URL-safe characters; skip the query for anything that can't be one.
-  if (!/^[A-Za-z0-9_-]{32,64}$/.test(token)) return null;
+/** Private links are 32 URL-safe characters; anything else can't be one. */
+export function isTokenShape(token: string): boolean {
+  return /^[A-Za-z0-9_-]{32,64}$/.test(token);
+}
+
+export const getCustomerView = cache(async (token: string): Promise<CustomerView | null> => {
+  if (!isTokenShape(token)) return null;
 
   const db = await getDb();
   const [row] = await db
@@ -243,6 +251,11 @@ export async function getCustomerAccountByToken(token: string): Promise<Customer
   if (!row) return null;
 
   const { account: a, profile: p } = row;
+  const [ms, usage] = await Promise.all([
+    db.select().from(milestones).where(eq(milestones.accountId, a.id)).orderBy(asc(milestones.sortOrder)),
+    db.select().from(usageSnapshots).where(eq(usageSnapshots.accountId, a.id)).orderBy(asc(usageSnapshots.date)),
+  ]);
+
   return {
     name: a.name,
     industry: a.industry,
@@ -259,5 +272,7 @@ export async function getCustomerAccountByToken(token: string): Promise<Customer
       championKit: p.championKit,
       guides: p.guides,
     },
+    milestones: ms.map(toChecklist),
+    usage: usage.map((u) => ({ date: u.date, activeSeats: u.activeSeats, teams: u.teams })),
   };
-}
+});
