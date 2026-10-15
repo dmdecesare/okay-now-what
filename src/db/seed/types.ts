@@ -1,3 +1,4 @@
+import type { DocKey } from "@/lib/resources";
 import type {
   AccountProfile,
   InsightContent,
@@ -34,7 +35,7 @@ export type SeedAccount = {
   }[];
   usage: { daysAgo: number; teams: TeamUsage[] }[];
   spend: { monthsAgo: number; seat: number; usage: number }[];
-  questions: { question: string; answer: string; topic: QuestionTopic; daysAgo: number }[];
+  questions: { question: string; answer: string; topic: QuestionTopic; daysAgo: number; sources?: DocKey[] }[];
   /** Pre-written "Claude's take" so the demo loads instantly. Phase 5 replaces these live. */
   insights: Partial<InsightContent>;
 };

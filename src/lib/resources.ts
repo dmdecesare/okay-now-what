@@ -238,8 +238,9 @@ export const DOC_CATALOG = {
 export type DocKey = keyof typeof DOC_CATALOG;
 export const DOC_KEYS = Object.keys(DOC_CATALOG) as [DocKey, ...DocKey[]];
 
-export function docLinks(keys: readonly DocKey[] | undefined): DocLink[] {
-  return (keys ?? []).map((k) => DOC_CATALOG[k]);
+export function docLinks(keys: readonly string[] | null | undefined): DocLink[] {
+  // Unknown keys are skipped, so stale data can never render a broken link.
+  return (keys ?? []).flatMap((k) => (k in DOC_CATALOG ? [DOC_CATALOG[k as DocKey]] : []));
 }
 
 /** Official docs for each guide topic, best first. */

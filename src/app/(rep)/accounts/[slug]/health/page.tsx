@@ -3,6 +3,8 @@ import { Card } from "@/components/ui/card";
 import { StatusPill } from "@/components/ui/badges";
 import { TabSkeleton } from "@/components/account/tab-skeleton";
 import { InsightCard } from "@/components/account/insight-card";
+import { refreshInsightAction } from "@/app/actions/ai";
+
 import { RULES } from "@/lib/health";
 import { cn } from "@/lib/cn";
 import { loadAccount } from "../load";
@@ -22,7 +24,7 @@ export default function HealthPage({ params }: PageProps<"/accounts/[slug]/healt
 }
 
 async function Health({ params }: { params: PageProps<"/accounts/[slug]/health">["params"] }) {
-  const { health, insights } = await loadAccount(params);
+  const { account, health, insights } = await loadAccount(params);
   const fired = new Set(health.signals.map((s) => s.key));
   const riskPlay = insights.risk_play;
 
@@ -34,7 +36,12 @@ async function Health({ params }: { params: PageProps<"/accounts/[slug]/health">
       </Card>
 
       {health.status !== "on_track" && (
-        <InsightCard title="Recovery play" source={riskPlay?.source}>
+        <InsightCard
+          title="Recovery play"
+          source={riskPlay?.source}
+          generatedAt={riskPlay?.generatedAt}
+          refresh={refreshInsightAction.bind(null, account.slug, "risk_play")}
+        >
           {riskPlay ? (
             <div className="space-y-4">
               <p className="text-sm">{riskPlay.content.explanation}</p>
@@ -49,7 +56,7 @@ async function Health({ params }: { params: PageProps<"/accounts/[slug]/health">
             </div>
           ) : (
             <p className="text-sm text-ink-muted">
-              No play written yet. Claude will write one here once live AI is turned on.
+              No play written yet. Ask Claude to write one from the signals below.
             </p>
           )}
         </InsightCard>

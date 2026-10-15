@@ -7,6 +7,7 @@ import {
   type AccountProfile,
   type InsightContent,
   type InsightKind,
+  type MaterialKind,
   type Stage,
   type TeamUsage,
 } from "@/lib/schemas";
@@ -17,6 +18,7 @@ import {
   accounts,
   aiInsights,
   customerQuestions,
+  generatedMaterials,
   milestones,
   spendMonths,
   usageSnapshots,
@@ -172,6 +174,8 @@ export type AccountDetail = {
   questions: CustomerQuestion[];
   insights: Insights;
   health: Health;
+  /** Saved tool drafts, by kind. */
+  materials: Partial<Record<MaterialKind, { content: string; updatedAt: Date }>>;
 };
 
 /** Everything the rep sees for one account. Deduped per request across layout and tab. */
@@ -186,7 +190,7 @@ export const getAccountDetail = cache(async (slug: string): Promise<AccountDetai
   if (!row) return null;
 
   const id = row.account.id;
-  const [ms, usage, spend, questions, insights] = await Promise.all([
+  const [ms, usage, spend, questions, insights, materials] = await Promise.all([
     db.select().from(milestones).where(eq(milestones.accountId, id)).orderBy(asc(milestones.sortOrder)),
     db.select().from(usageSnapshots).where(eq(usageSnapshots.accountId, id)).orderBy(asc(usageSnapshots.date)),
     db.select().from(spendMonths).where(eq(spendMonths.accountId, id)).orderBy(asc(spendMonths.month)),
@@ -196,6 +200,7 @@ export const getAccountDetail = cache(async (slug: string): Promise<AccountDetai
       .where(eq(customerQuestions.accountId, id))
       .orderBy(desc(customerQuestions.askedAt)),
     db.select().from(aiInsights).where(eq(aiInsights.accountId, id)),
+    db.select().from(generatedMaterials).where(eq(generatedMaterials.accountId, id)),
   ]);
 
   const now = new Date();
@@ -209,6 +214,7 @@ export const getAccountDetail = cache(async (slug: string): Promise<AccountDetai
     questions,
     insights: toInsights(insights),
     health: healthFor(row.account, row.profile, { usage, spend, milestones: ms, questions }, now),
+    materials: Object.fromEntries(materials.map((m) => [m.kind, { content: m.content, updatedAt: m.updatedAt }])),
   };
 });
 
@@ -276,3 +282,24 @@ export const getCustomerView = cache(async (token: string): Promise<CustomerView
     usage: usage.map((u) => ({ date: u.date, activeSeats: u.activeSeats, teams: u.teams })),
   };
 });
+
+/**
+ * Server-only context for the Ask assistant: the customer view plus the account ID and
+ * the topics raised during the deal (concern titles only, no rep notes). Never sent to
+ * the browser.
+ */
+export async function getAskContext(
+  token: string,
+): Promise<(CustomerView & { accountId: string; slug: string; concerns: string[] }) | null> {
+  const view = await getCustomerView(token);
+  if (!view) return null;
+  const db = await getDb();
+  const [row] = await db
+    .select({ id: accounts.id, slug: accounts.slug, profile: accountProfiles.data })
+    .from(accounts)
+    .innerJoin(accountProfiles, eq(accountProfiles.accountId, accounts.id))
+    .where(eq(accounts.customerToken, token))
+    .limit(1);
+  if (!row) return null;
+  return { ...view, accountId: row.id, slug: row.slug, concerns: row.profile.concerns.map((c) => c.concern) };
+}

@@ -3,6 +3,10 @@ import { Card, EmptyState } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badges";
 import { TabSkeleton } from "@/components/account/tab-skeleton";
 import { InsightCard } from "@/components/account/insight-card";
+import { refreshInsightAction } from "@/app/actions/ai";
+import { AnswerText } from "@/components/customer/answer-text";
+import { DocLinkList } from "@/components/customer/doc-link-list";
+import { docLinks } from "@/lib/resources";
 import { daysBetween } from "@/lib/dates";
 import type { QuestionTopic } from "@/lib/schemas";
 import { loadAccount } from "../load";
@@ -31,7 +35,7 @@ export default function QuestionsPage({ params }: PageProps<"/accounts/[slug]/qu
 }
 
 async function Questions({ params }: { params: PageProps<"/accounts/[slug]/questions">["params"] }) {
-  const { questions, insights } = await loadAccount(params);
+  const { account, questions, insights } = await loadAccount(params);
   const themes = insights.question_themes;
 
   if (questions.length === 0) {
@@ -45,8 +49,16 @@ async function Questions({ params }: { params: PageProps<"/accounts/[slug]/quest
 
   return (
     <div className="space-y-6">
-      {themes && (
-        <InsightCard title="What they're asking about" source={themes.source}>
+      <InsightCard
+        title="What they're asking about"
+        source={themes?.source}
+        generatedAt={themes?.generatedAt}
+        refresh={refreshInsightAction.bind(null, account.slug, "question_themes")}
+      >
+        {!themes ? (
+          <p className="text-sm text-ink-muted">Ask Claude to group these questions into themes.</p>
+        ) : (
+          <>
           <p className="text-sm">{themes.content.summary}</p>
           <ul className="mt-4 grid gap-3 sm:grid-cols-2">
             {themes.content.themes.map((t) => (
@@ -58,8 +70,9 @@ async function Questions({ params }: { params: PageProps<"/accounts/[slug]/quest
               </li>
             ))}
           </ul>
-        </InsightCard>
-      )}
+          </>
+        )}
+      </InsightCard>
 
       <Card>
         <h2 className="mb-1 font-semibold">Customer questions</h2>
@@ -72,14 +85,19 @@ async function Questions({ params }: { params: PageProps<"/accounts/[slug]/quest
                 <span>{askedAgo(q.askedAt)}</span>
               </div>
               <p className="mt-2 font-medium">{q.question}</p>
-              {q.answer && (
+              {q.answer ? (
                 <details className="group mt-2">
                   <summary className="cursor-pointer list-none text-sm font-medium text-accent hover:text-accent-hover">
                     <span className="group-open:hidden">Show the answer they got</span>
                     <span className="hidden group-open:inline">Hide answer</span>
                   </summary>
-                  <p className="mt-2 rounded-lg bg-surface p-3 text-sm text-ink-muted">{q.answer}</p>
+                  <div className="mt-2 rounded-lg bg-surface p-3 text-ink-muted">
+                    <AnswerText text={q.answer} />
+                    <DocLinkList links={docLinks(q.sources)} heading="Sources cited" />
+                  </div>
                 </details>
+              ) : (
+                <p className="mt-2 text-sm text-watch">Not answered yet. Worth a direct follow-up.</p>
               )}
             </li>
           ))}

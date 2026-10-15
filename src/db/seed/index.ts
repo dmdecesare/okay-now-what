@@ -128,6 +128,7 @@ async function insertSeed(db: DB, now: Date = new Date()): Promise<void> {
           question: q.question,
           answer: q.answer,
           topic: q.topic,
+          sources: q.sources ?? null,
           // Spread across the working day so ordering is stable.
           askedAt: new Date(now.getTime() - q.daysAgo * DAY_MS - (i + 1) * 37 * 60 * 1000),
         })),

@@ -103,6 +103,8 @@ export const customerQuestions = pgTable(
     question: text("question").notNull(),
     answer: text("answer"),
     topic: text("topic").$type<QuestionTopic>().notNull(),
+    /** Keys from the verified doc catalog that the answer cited. */
+    sources: jsonb("sources").$type<string[]>(),
     askedAt: timestamp("asked_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("questions_account_idx").on(t.accountId)],
@@ -136,6 +138,22 @@ export const aiInsights = pgTable(
     generatedAt: timestamp("generated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("insights_account_kind_idx").on(t.accountId, t.kind)],
+);
+
+/** One row per live AI call. Powers rate limiting and the "by the numbers" stats. */
+export const aiCalls = pgTable(
+  "ai_calls",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    feature: text("feature").notNull(),
+    /** Hashed caller IP. The raw IP is never stored. */
+    ipHash: text("ip_hash").notNull(),
+    status: text("status").$type<"ok" | "error" | "refused" | "limited">().notNull(),
+    inputTokens: integer("input_tokens"),
+    outputTokens: integer("output_tokens"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("ai_calls_created_idx").on(t.createdAt), index("ai_calls_ip_idx").on(t.ipHash, t.createdAt)],
 );
 
 export type Account = typeof accounts.$inferSelect;

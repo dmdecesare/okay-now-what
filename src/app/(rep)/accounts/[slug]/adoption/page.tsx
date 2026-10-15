@@ -3,6 +3,8 @@ import { Card } from "@/components/ui/card";
 import { Stat } from "@/components/ui/metrics";
 import { TabSkeleton } from "@/components/account/tab-skeleton";
 import { InsightCard } from "@/components/account/insight-card";
+import { refreshInsightAction } from "@/app/actions/ai";
+
 import { NoUsageNote } from "@/components/account/no-usage-note";
 import { AdoptionChart } from "@/components/charts/adoption-chart";
 import { baselineSnapshot, biggestDrop, pct, sortSnapshots, teamPeaks, teamTrends } from "@/lib/adoption";
@@ -56,8 +58,15 @@ async function Adoption({ params }: { params: PageProps<"/accounts/[slug]/adopti
         <Stat label="Last updated" value={formatDate(latest.date)} sub="Demo data" />
       </Card>
 
-      {nba && (
-        <InsightCard title="Next best action" source={nba.source}>
+      <InsightCard
+        title="Next best action"
+        source={nba?.source}
+        generatedAt={nba?.generatedAt}
+        refresh={refreshInsightAction.bind(null, account.slug, "next_best_action")}
+      >
+        {!nba ? (
+          <p className="text-sm text-ink-muted">Ask Claude for the one to three things that would move adoption most this week.</p>
+        ) : (
           <ol className="space-y-3">
             {nba.content.actions.map((a, i) => (
               <li key={a.title} className="flex gap-3">
@@ -71,8 +80,8 @@ async function Adoption({ params }: { params: PageProps<"/accounts/[slug]/adopti
               </li>
             ))}
           </ol>
-        </InsightCard>
-      )}
+        )}
+      </InsightCard>
 
       <Card>
         <h2 className="font-semibold">Seats active over time</h2>

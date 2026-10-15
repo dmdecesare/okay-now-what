@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { TabSkeleton } from "@/components/account/tab-skeleton";
 import { ToolCard } from "@/components/account/tool-card";
+import { generateToolAction } from "@/app/actions/ai";
 import type { AccountProfile, MaterialKind } from "@/lib/schemas";
 import { loadAccount } from "../load";
 
@@ -20,7 +21,7 @@ const TOOLS: Tool[] = [
   { kind: "value_summary", title: "Renewal and value summary", description: "Adoption, wins, and the case for renewal." },
 ];
 
-/** Drafts that already exist in the champion kit, until Phase 5 can generate the rest. */
+/** Drafts that already exist in the champion kit, shown until Claude writes a fresh one. */
 function starterDraft(kind: MaterialKind, profile: AccountProfile): string | null {
   const kit = profile.championKit;
   switch (kind) {
@@ -44,13 +45,13 @@ export default function ToolsPage({ params }: PageProps<"/accounts/[slug]/tools"
 }
 
 async function Tools({ params }: { params: PageProps<"/accounts/[slug]/tools">["params"] }) {
-  const { account, profile } = await loadAccount(params);
+  const { account, profile, materials } = await loadAccount(params);
   const tools = TOOLS.filter((t) => !t.pilotOnly || account.stage === "pilot");
 
   return (
     <div className="space-y-4">
       <p className="text-sm text-ink-muted">
-        One-click drafts written for {account.name}. Edit them here, then copy them anywhere.
+        One-click drafts written by Claude for {account.name}, using this account&apos;s goals, people, and numbers. Edit them here, then copy them anywhere.
       </p>
       <div className="grid gap-4 md:grid-cols-2">
         {tools.map((t) => (
@@ -58,7 +59,16 @@ async function Tools({ params }: { params: PageProps<"/accounts/[slug]/tools">["
             key={t.kind}
             title={t.title}
             description={t.description}
-            draft={starterDraft(t.kind, profile)}
+            draft={materials[t.kind]?.content ?? starterDraft(t.kind, profile)}
+            version={materials[t.kind]?.updatedAt.toISOString() ?? "starter"}
+            writtenNote={
+              materials[t.kind]
+                ? `Written by Claude on ${materials[t.kind]!.updatedAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+                : starterDraft(t.kind, profile)
+                  ? "Starter draft from the champion kit"
+                  : undefined
+            }
+            generate={generateToolAction.bind(null, account.slug, t.kind)}
           />
         ))}
       </div>
