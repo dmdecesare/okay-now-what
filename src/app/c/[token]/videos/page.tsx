@@ -2,8 +2,13 @@ import { Suspense } from "react";
 import { Card } from "@/components/ui/card";
 import { TabSkeleton } from "@/components/account/tab-skeleton";
 import { SendToDevs } from "@/components/customer/send-to-devs";
-import { VIDEO_GROUPS } from "@/lib/resources";
+import { DocLinkList } from "@/components/customer/doc-link-list";
+import { VIDEO_GROUPS, docLinks } from "@/lib/resources";
 import { loadCustomer } from "../data";
+
+function monthYear(iso: string) {
+  return new Date(iso + "T00:00:00Z").toLocaleString("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
+}
 
 export default function VideosPage({ params }: PageProps<"/c/[token]/videos">) {
   return (
@@ -27,35 +32,38 @@ async function Videos({ params }: { params: PageProps<"/c/[token]/videos">["para
         <SendToDevs company={c.name} groups={forStage.map((g) => ({ title: g.title, videos: g.videos }))} />
       </Card>
 
+      <p className="text-sm text-ink-muted">
+        Short, official videos from GitHub&apos;s YouTube channel. Copilot changes quickly, so if something on screen
+        looks different, the linked docs have the latest steps.
+      </p>
+
       <div className="grid gap-4 md:grid-cols-2">
         {VIDEO_GROUPS.map((g) => (
           <Card key={g.id}>
             <h2 className="font-semibold">{g.title}</h2>
             <p className="mt-1 text-sm text-ink-muted">{g.description}</p>
-            {g.videos.length > 0 ? (
-              <ul className="mt-4 space-y-2">
-                {g.videos.map((v) => (
-                  <li key={v.url}>
-                    <a
-                      href={v.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-start gap-2 text-sm font-medium text-accent hover:text-accent-hover"
-                    >
-                      <PlayIcon />
-                      <span>
-                        {v.title}
-                        {v.minutes ? <span className="font-normal text-ink-faint"> · {v.minutes} min</span> : null}
+            <ul className="mt-4 space-y-3">
+              {g.videos.map((v) => (
+                <li key={v.url}>
+                  <a
+                    href={v.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-start gap-2 text-sm font-medium text-accent hover:text-accent-hover"
+                  >
+                    <PlayIcon />
+                    <span>
+                      {v.title}
+                      <span className="mt-0.5 block text-xs font-normal text-ink-faint">
+                        GitHub on YouTube · {v.minutes < 1 ? "under a minute" : `${v.minutes} min`} ·{" "}
+                        {monthYear(v.published)}
                       </span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="mt-4 rounded-lg bg-surface px-3 py-2 text-sm text-ink-faint">
-                We&apos;re picking the best official videos for this topic.
-              </p>
-            )}
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <DocLinkList links={docLinks(g.articles)} heading="Prefer to read?" />
           </Card>
         ))}
       </div>

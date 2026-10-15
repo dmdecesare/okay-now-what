@@ -65,9 +65,9 @@ function groupBy<T, K>(rows: T[], key: (r: T) => K): Map<K, T[]> {
   return out;
 }
 
-function spendTrend(spend: { month: string; seatSpend: number; premiumRequestSpend: number }[]): SpendTrend {
+function spendTrend(spend: { month: string; seatSpend: number; usageSpend: number }[]): SpendTrend {
   if (spend.length < 2) return "none";
-  const [prev, last] = spend.slice(-2).map((m) => m.seatSpend + m.premiumRequestSpend);
+  const [prev, last] = spend.slice(-2).map((m) => m.seatSpend + m.usageSpend);
   const change = (last - prev) / prev;
   // Seat spend dominates the total, so even a small move is worth an arrow.
   if (change > 0.005) return "up";
@@ -148,7 +148,7 @@ export async function listAccountSummaries(now: Date = new Date()): Promise<Acco
       seats: a.seats,
       activeSeats: latest?.activeSeats ?? null,
       activePct: latest ? activePct(latest.activeSeats, a.seats) : null,
-      monthlySpend: lastMonth ? lastMonth.seatSpend + lastMonth.premiumRequestSpend : null,
+      monthlySpend: lastMonth ? lastMonth.seatSpend + lastMonth.usageSpend : null,
       spendTrend: spendTrend(s),
       health: healthFor(
         a,

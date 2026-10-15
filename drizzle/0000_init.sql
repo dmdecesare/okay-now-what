@@ -23,6 +23,15 @@ CREATE TABLE "accounts" (
 	CONSTRAINT "accounts_customer_token_unique" UNIQUE("customer_token")
 );
 --> statement-breakpoint
+CREATE TABLE "ai_insights" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"account_id" uuid NOT NULL,
+	"kind" text NOT NULL,
+	"content" jsonb NOT NULL,
+	"source" text NOT NULL,
+	"generated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "customer_questions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"account_id" uuid NOT NULL,
@@ -57,7 +66,7 @@ CREATE TABLE "spend_months" (
 	"account_id" uuid NOT NULL,
 	"month" date NOT NULL,
 	"seat_spend" integer NOT NULL,
-	"premium_request_spend" integer NOT NULL
+	"usage_spend" integer NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "usage_snapshots" (
@@ -69,11 +78,13 @@ CREATE TABLE "usage_snapshots" (
 );
 --> statement-breakpoint
 ALTER TABLE "account_profiles" ADD CONSTRAINT "account_profiles_account_id_accounts_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "ai_insights" ADD CONSTRAINT "ai_insights_account_id_accounts_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "customer_questions" ADD CONSTRAINT "customer_questions_account_id_accounts_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "generated_materials" ADD CONSTRAINT "generated_materials_account_id_accounts_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "milestones" ADD CONSTRAINT "milestones_account_id_accounts_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "spend_months" ADD CONSTRAINT "spend_months_account_id_accounts_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "usage_snapshots" ADD CONSTRAINT "usage_snapshots_account_id_accounts_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+CREATE UNIQUE INDEX "insights_account_kind_idx" ON "ai_insights" USING btree ("account_id","kind");--> statement-breakpoint
 CREATE INDEX "questions_account_idx" ON "customer_questions" USING btree ("account_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "materials_account_kind_idx" ON "generated_materials" USING btree ("account_id","kind");--> statement-breakpoint
 CREATE INDEX "milestones_account_idx" ON "milestones" USING btree ("account_id");--> statement-breakpoint

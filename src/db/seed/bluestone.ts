@@ -105,6 +105,7 @@ export const bluestone: SeedAccount = {
     setupSteps: [
       {
         id: "custom-instructions",
+        docs: ["repo-instructions", "ide-instructions"],
         title: "Add custom instructions for legacy Java repos",
         why: "Suggestions on old Java get much better when Copilot knows your Java version, frameworks, and conventions.",
         steps: [
@@ -117,6 +118,7 @@ export const bluestone: SeedAccount = {
       },
       {
         id: "public-code-filter",
+        docs: ["enterprise-policies", "matching-code"],
         title: "Keep the public code filter on",
         why: "Security resolved this during the deal. Keep it documented so it stays that way.",
         steps: [
@@ -127,6 +129,7 @@ export const bluestone: SeedAccount = {
       },
       {
         id: "metrics",
+        docs: ["view-usage", "usage-metrics"],
         title: "Use usage metrics for the monthly CIO update",
         why: "Elena wants a monthly update she can forward to the CIO without extra work.",
         steps: [
@@ -138,6 +141,7 @@ export const bluestone: SeedAccount = {
       },
       {
         id: "seats",
+        docs: ["remind-inactive", "seat-assignment"],
         title: "Review inactive seats",
         why: "Inactive seats are the first thing finance asks about before renewal.",
         steps: [
@@ -148,11 +152,12 @@ export const bluestone: SeedAccount = {
         audience: "admin",
       },
       {
-        id: "premium-budget",
-        title: "Check premium request budgets",
-        why: "Premium requests power agent mode and Chat. A budget set too low can quietly block teams that want to use them.",
+        id: "ai-credit-budget",
+        docs: ["budgets", "ai-credits"],
+        title: "Check AI credit budgets",
+        why: "AI credits power Chat, agent mode, and the cloud agent. A budget set too low can quietly block teams that want to use them.",
         steps: [
-          "Review premium request usage by team in billing",
+          "Review AI credit usage by team in billing",
           "Make sure budgets aren't blocking teams that want to use agent mode",
         ],
         audience: "admin",
@@ -191,7 +196,7 @@ Elena`,
         },
         {
           q: "Is our code used for training?",
-          a: "GitHub states that it does not use Copilot Business or Enterprise customers' code to train its models. Security reviewed this during the purchase.",
+          a: "No. GitHub's documentation says: \"GitHub does not use Copilot Business or Copilot Enterprise customer data to train AI models.\" Security reviewed this during the purchase.",
         },
         {
           q: "Why are suggestions weaker on old Java?",
@@ -214,7 +219,7 @@ Elena`,
       { topic: "better-prompts", why: "Better results on legacy code with better context" },
       { topic: "writing-tests", why: "A safety net before touching old code" },
       { topic: "track-team-leads", why: "Monthly adoption numbers for the CIO update" },
-      { topic: "premium-requests", why: "Make sure budgets aren't holding teams back" },
+      { topic: "ai-credits", why: "Make sure budgets aren't holding teams back" },
     ],
   },
 
@@ -289,9 +294,9 @@ Elena`,
   })),
 
   spend: [
-    { monthsAgo: 2, seat: 27300, premium: 2900 },
-    { monthsAgo: 1, seat: 27300, premium: 2650 },
-    { monthsAgo: 0, seat: 27300, premium: 2380 },
+    { monthsAgo: 2, seat: 27300, usage: 2900 },
+    { monthsAgo: 1, seat: 27300, usage: 2650 },
+    { monthsAgo: 0, seat: 27300, usage: 2380 },
   ],
 
   questions: [
@@ -315,7 +320,7 @@ Elena`,
     risk_play: {
       reason: "Claims team adoption collapsed, and Elena has been quiet for 22 days.",
       explanation:
-        "Seat activity fell from an 84% peak to 71%, almost all of it on the claims platform team (75% down to 28%). Premium request spend is down 18% over two months, both overdue milestones are claims team work, and Elena may be pulled into a Q4 reorg. Renewal is about nine months out, so this is the window to fix it.",
+        "Seat activity fell from an 84% peak to 71%, almost all of it on the claims platform team (75% down to 28%). Additional usage is down 18% over two months, both overdue milestones are claims team work, and Elena may be pulled into a Q4 reorg. Renewal is about nine months out, so this is the window to fix it.",
       play: {
         title: "Win back the claims team",
         steps: [

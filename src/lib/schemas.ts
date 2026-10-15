@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { GUIDE_TOPIC_IDS } from "./guide-topics";
+import { DOC_KEYS } from "./resources";
 
 // Shapes for the account content Claude generates from deal notes (Phase 6).
 // Seed data uses the same shapes, and everything is validated before it is saved.
@@ -37,6 +38,8 @@ export const setupStepSchema = z.object({
   why: z.string().describe("Tied to a concern from the deal where possible"),
   steps: z.array(z.string()),
   audience: z.enum(["admin", "security", "team_lead", "developer"]),
+  /** Official docs for this step, chosen only from the verified catalog. */
+  docs: z.array(z.enum(DOC_KEYS)).max(3).optional(),
 });
 
 export const faqItemSchema = z.object({ q: z.string(), a: z.string() });

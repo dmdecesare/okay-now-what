@@ -47,3 +47,15 @@ A few lines per session. This feeds pages 5 and 6 of the PDF.
 - One setup step told the customer their usage was falling, which felt like rep-only insight. Claude reworded it.
 **Anything that surprised me about Claude:** It thought about my demo: opening a customer link as the rep would have reset Elena's "quiet for 22 days" signal, so it added a rep preview mode.
 **Screenshot to capture for the PDF:** Customer Plan tab with checkboxes; Bluestone's customer home ("Welcome, Elena"); the rep Plan tab showing "Done by the customer".
+
+## Session 4: Phase 4, verified resource library (2026-10-15)
+
+**Date and time spent:**
+**What I asked Claude Code to do:** Find and verify official videos and docs for every guide topic and video group.
+**What worked on the first try:** Pulling candidate pages straight from GitHub Docs' own page index, and confirming each video's channel with YouTube's oEmbed endpoint. Every pick is an official GitHub source.
+**What broke and how we fixed it:**
+- GitHub Docs rate-limited us after a bulk download. Claude built the link checker to go one request at a time and back off when told to.
+- The checker first read every docs title as blank, because the title tag has an attribute. Fixed the pattern; four guessed titles were then corrected to GitHub's real ones.
+**Anything that surprised me about Claude:** It found that my spec was out of date. GitHub replaced premium requests with usage-based billing in AI credits on June 1, 2026, and renamed the coding agent to the cloud agent. I chose to update the app to the current terms. It also quoted GitHub's exact wording on training ("GitHub does not use Copilot Business or Copilot Enterprise customer data to train AI models") instead of paraphrasing.
+**Numbers:** 52 links verified: 41 docs.github.com pages and 11 videos from GitHub's official YouTube channel (7 from 2026). Re-run any time with `npm run check:links`.
+**Screenshot to capture for the PDF:** Customer Videos tab; Setup guide step with "Read the docs" links; terminal output of `npm run check:links`.

@@ -3,7 +3,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badges";
 import { TabSkeleton } from "@/components/account/tab-skeleton";
 import { GUIDE_LEVELS, GUIDE_TOPIC_BY_ID, GUIDE_TOPICS, type GuideTopicId } from "@/lib/guide-topics";
-import { GUIDE_LINKS } from "@/lib/resources";
+import { GUIDE_DOCS, docLinks } from "@/lib/resources";
+import { DocLinkList } from "@/components/customer/doc-link-list";
 import { loadCustomer } from "../data";
 
 export default function GuidesPage({ params }: PageProps<"/c/[token]/guides">) {
@@ -15,24 +16,7 @@ export default function GuidesPage({ params }: PageProps<"/c/[token]/guides">) {
 }
 
 function DocLinks({ topic }: { topic: GuideTopicId }) {
-  const links = GUIDE_LINKS[topic] ?? [];
-  if (links.length === 0) return null;
-  return (
-    <ul className="mt-3 space-y-1">
-      {links.map((l) => (
-        <li key={l.url}>
-          <a
-            href={l.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-medium text-accent hover:text-accent-hover"
-          >
-            {l.title} <span aria-hidden>&rarr;</span>
-          </a>
-        </li>
-      ))}
-    </ul>
-  );
+  return <DocLinkList links={docLinks(GUIDE_DOCS[topic])} />;
 }
 
 async function Guides({ params }: { params: PageProps<"/c/[token]/guides">["params"] }) {

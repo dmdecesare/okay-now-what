@@ -108,7 +108,7 @@ async function insertSeed(db: DB, now: Date = new Date()): Promise<void> {
         accountId,
         month: monthStart(today, m.monthsAgo),
         seatSpend: m.seat,
-        premiumRequestSpend: m.premium,
+        usageSpend: m.usage,
       })),
     );
 

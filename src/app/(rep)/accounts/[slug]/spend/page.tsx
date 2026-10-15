@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Stat } from "@/components/ui/metrics";
 import { TabSkeleton } from "@/components/account/tab-skeleton";
 import { NoUsageNote } from "@/components/account/no-usage-note";
-import { PremiumSpendChart, SpendTotalChart } from "@/components/charts/spend-chart";
+import { UsageSpendChart, SpendTotalChart } from "@/components/charts/spend-chart";
 import { summarizeSpend } from "@/lib/spend";
 import { PRICING_NOTE } from "@/lib/constants";
 import { formatUSD } from "@/lib/format";
@@ -38,8 +38,8 @@ async function Spend({ params }: { params: PageProps<"/accounts/[slug]/spend">["
         <div role="status" className="flex gap-3 rounded-xl border border-risk/25 bg-risk-soft px-5 py-4 text-sm">
           <span className="font-semibold text-risk">Spend is dropping.</span>
           <span>
-            Premium request spend fell {Math.abs(s.premiumTwoMonthChange!)}% in two months ({formatUSD(first.premium)} in{" "}
-            {first.label} to {formatUSD(last.premium)} in {last.label}). Less agent mode and Chat use usually comes first.
+            Additional usage fell {Math.abs(s.usageTwoMonthChange!)}% in two months ({formatUSD(first.usage)} in{" "}
+            {first.label} to {formatUSD(last.usage)} in {last.label}). That usually means less Chat, agent mode, and cloud agent use.
           </span>
         </div>
       )}
@@ -49,23 +49,23 @@ async function Spend({ params }: { params: PageProps<"/accounts/[slug]/spend">["
         <Stat label="Vs last month" value={signed(s.changeVsLastMonth)} trend={trendOf(s.changeVsLastMonth)} />
         <Stat label="Seats" value={formatUSD(last.seat)} sub="Per month" />
         <Stat
-          label="Premium requests"
-          value={formatUSD(last.premium)}
-          sub={s.premiumTwoMonthChange != null ? `${signed(s.premiumTwoMonthChange)} over two months` : "Usage-based"}
-          trend={trendOf(s.premiumTwoMonthChange)}
+          label="Additional usage"
+          value={formatUSD(last.usage)}
+          sub={s.usageTwoMonthChange != null ? `${signed(s.usageTwoMonthChange)} over two months` : "Usage-based"}
+          trend={trendOf(s.usageTwoMonthChange)}
         />
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <h2 className="font-semibold">Monthly spend</h2>
-          <p className="mb-3 text-sm text-ink-muted">Seats and premium requests, stacked.</p>
+          <p className="mb-3 text-sm text-ink-muted">Seats plus additional usage, stacked.</p>
           <SpendTotalChart data={s.months} />
         </Card>
         <Card>
-          <h2 className="font-semibold">Premium request spend</h2>
-          <p className="mb-3 text-sm text-ink-muted">Usage-based spend on its own scale, where changes show up first.</p>
-          <PremiumSpendChart data={s.months} />
+          <h2 className="font-semibold">Additional usage</h2>
+          <p className="mb-3 text-sm text-ink-muted">AI credits used beyond the included pool, on their own scale so changes show up.</p>
+          <UsageSpendChart data={s.months} />
         </Card>
       </div>
 
@@ -77,7 +77,7 @@ async function Spend({ params }: { params: PageProps<"/accounts/[slug]/spend">["
               <tr className="border-b border-border">
                 <th className="py-2 pr-4 font-medium">Month</th>
                 <th className="py-2 pr-4 font-medium">Seats</th>
-                <th className="py-2 pr-4 font-medium">Premium requests</th>
+                <th className="py-2 pr-4 font-medium">Additional usage</th>
                 <th className="py-2 font-medium">Total</th>
               </tr>
             </thead>
@@ -86,7 +86,7 @@ async function Spend({ params }: { params: PageProps<"/accounts/[slug]/spend">["
                 <tr key={m.month} className="border-b border-border last:border-0">
                   <td className="py-2 pr-4 font-medium">{m.label}</td>
                   <td className="py-2 pr-4">{formatUSD(m.seat)}</td>
-                  <td className="py-2 pr-4">{formatUSD(m.premium)}</td>
+                  <td className="py-2 pr-4">{formatUSD(m.usage)}</td>
                   <td className="py-2 font-medium">{formatUSD(m.total)}</td>
                 </tr>
               ))}

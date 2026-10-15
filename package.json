@@ -13,7 +13,8 @@
     "check:health": "tsx scripts/check-health.ts",
     "check:copy": "tsx scripts/check-copy.ts",
     "check": "npm run typecheck && npm run lint && npm run check:copy",
-    "check:leaks": "tsx scripts/check-leaks.ts"
+    "check:leaks": "tsx scripts/check-leaks.ts",
+    "check:links": "tsx scripts/check-links.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.10",

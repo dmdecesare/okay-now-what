@@ -3,7 +3,7 @@
 import { Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { CHART, TooltipCard } from "./chart-tooltip";
 
-export type SpendPoint = { label: string; seat: number; premium: number; total: number };
+export type SpendPoint = { label: string; seat: number; usage: number; total: number };
 
 const usd = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 const compact = (n: number) =>
@@ -17,7 +17,7 @@ const axes = (
   </>
 );
 
-/** Monthly total, stacked: seats (bottom) and premium requests (top). */
+/** Monthly total, stacked: seats (bottom) and additional usage (top). */
 export function SpendTotalChart({ data }: { data: SpendPoint[] }) {
   return (
     <div>
@@ -26,7 +26,7 @@ export function SpendTotalChart({ data }: { data: SpendPoint[] }) {
           <span className="size-2.5 rounded-sm" style={{ background: CHART.primary }} /> Seats
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-sm" style={{ background: CHART.secondary }} /> Premium requests
+          <span className="size-2.5 rounded-sm" style={{ background: CHART.secondary }} /> Additional usage
         </span>
       </div>
       <div className="h-56 w-full">
@@ -43,7 +43,7 @@ export function SpendTotalChart({ data }: { data: SpendPoint[] }) {
                     title={p.label}
                     rows={[
                       { label: "Seats", value: usd(p.seat), color: CHART.primary },
-                      { label: "Premium requests", value: usd(p.premium), color: CHART.secondary },
+                      { label: "Additional usage", value: usd(p.usage), color: CHART.secondary },
                       { label: "Total", value: usd(p.total) },
                     ]}
                   />
@@ -53,7 +53,7 @@ export function SpendTotalChart({ data }: { data: SpendPoint[] }) {
             {/* The surface-colored stroke is the 2px gap between stacked segments. */}
             <Bar dataKey="seat" stackId="s" fill={CHART.primary} stroke={CHART.surface} strokeWidth={2} maxBarSize={24} isAnimationActive={false} />
             <Bar
-              dataKey="premium"
+              dataKey="usage"
               stackId="s"
               fill={CHART.secondary}
               stroke={CHART.surface}
@@ -71,8 +71,8 @@ export function SpendTotalChart({ data }: { data: SpendPoint[] }) {
   );
 }
 
-/** Premium request spend alone, on its own scale, so changes are visible. */
-export function PremiumSpendChart({ data }: { data: SpendPoint[] }) {
+/** Additional usage (AI credits beyond the included pool) alone, on its own scale. */
+export function UsageSpendChart({ data }: { data: SpendPoint[] }) {
   return (
     <div className="h-56 w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -83,11 +83,11 @@ export function PremiumSpendChart({ data }: { data: SpendPoint[] }) {
             content={({ active, payload }) => {
               const p = payload?.[0]?.payload as SpendPoint | undefined;
               if (!active || !p) return null;
-              return <TooltipCard title={p.label} rows={[{ label: "Premium requests", value: usd(p.premium), color: CHART.secondary }]} />;
+              return <TooltipCard title={p.label} rows={[{ label: "Additional usage", value: usd(p.usage), color: CHART.secondary }]} />;
             }}
           />
-          <Bar dataKey="premium" fill={CHART.secondary} radius={[4, 4, 0, 0]} maxBarSize={24} isAnimationActive={false}>
-            <LabelList dataKey="premium" position="top" formatter={(v) => usd(Number(v))} fontSize={12} fill="var(--ink-muted)" />
+          <Bar dataKey="usage" fill={CHART.secondary} radius={[4, 4, 0, 0]} maxBarSize={24} isAnimationActive={false}>
+            <LabelList dataKey="usage" position="top" formatter={(v) => usd(Number(v))} fontSize={12} fill="var(--ink-muted)" />
           </Bar>
         </BarChart>
       </ResponsiveContainer>

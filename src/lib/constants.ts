@@ -2,7 +2,7 @@ import type { Stage } from "./schemas";
 
 /** Demo assumption from SPEC section 8: Copilot Enterprise list price per seat per month. */
 export const SEAT_PRICE_USD = 39;
-export const PRICING_NOTE = "Demo assumption: $39 per seat per month, plus usage-based premium requests.";
+export const PRICING_NOTE = "Demo assumption: Copilot Enterprise at $39 per seat per month, which includes 3,900 AI credits per user. Usage beyond the pooled credits is billed as additional usage.";
 
 export const STAGE_LABELS: Record<Stage, string> = {
   pilot: "Pilot",

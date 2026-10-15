@@ -132,6 +132,7 @@ export const harborline: SeedAccount = {
     setupSteps: [
       {
         id: "exclude-pci",
+        docs: ["content-exclusion-howto", "content-exclusion-about"],
         title: "Exclude PCI-scoped repositories",
         why: "AppSec asked to keep PCI-scoped code out of Copilot.",
         steps: [
@@ -143,17 +144,19 @@ export const harborline: SeedAccount = {
       },
       {
         id: "data-handling",
+        docs: ["approval-resources", "model-hosting"],
         title: "Review data handling and retention with AppSec",
         why: "AppSec needs a clean answer on data retention before they sign off.",
         steps: [
-          "Read the data handling section of GitHub's Copilot Trust Center",
-          "Review your organization's Copilot policies together in the admin settings",
+          "Send AppSec GitHub's approval resources page: terms, data protection agreement, and trust center links",
+          "Walk through where models are hosted and GitHub's commitment not to train on your data",
           "Send AppSec a one-page summary and ask for written sign-off",
         ],
         audience: "security",
       },
       {
         id: "public-code-filter",
+        docs: ["enterprise-policies", "matching-code"],
         title: "Block suggestions that match public code",
         why: "Legal will ask about IP. This setting reduces the chance of suggestions that match public code.",
         steps: [
@@ -164,6 +167,7 @@ export const harborline: SeedAccount = {
       },
       {
         id: "pilot-seats",
+        docs: ["seat-assignment", "setup-org"],
         title: "Assign seats to the four pilot teams",
         why: "Keeps the pilot to 100 seats across checkout, risk, mobile, and internal tools.",
         steps: [
@@ -175,6 +179,7 @@ export const harborline: SeedAccount = {
       },
       {
         id: "metrics",
+        docs: ["usage-metrics", "measure-success"],
         title: "Turn on usage metrics for the readout",
         why: "The CTO wants hard numbers. Usage metrics plus PR cycle time make the case.",
         steps: [
@@ -185,11 +190,13 @@ export const harborline: SeedAccount = {
         audience: "team_lead",
       },
       {
-        id: "premium-budget",
-        title: "Set a premium request budget",
+        id: "ai-credit-budget",
+        docs: ["ai-credits", "budgets"],
+        title: "Set AI credit budgets",
         why: "Keeps pilot spend predictable while teams try agent mode and code review.",
         steps: [
-          "Check premium request usage in your billing settings",
+          "Check AI credit usage in your billing settings",
+          "Decide whether to allow additional usage beyond the included credits (it's on by default)",
           "Set a monthly budget for the pilot",
           "Review it again after the agent mode workshop",
         ],
@@ -234,7 +241,7 @@ Priya`,
         },
         {
           q: "Is our code used for training?",
-          a: "GitHub states that it does not use Copilot Business or Enterprise customers' code to train its models. AppSec is reviewing the full data handling details from GitHub's Copilot Trust Center as part of this pilot.",
+          a: "No. GitHub's documentation says: \"GitHub does not use Copilot Business or Copilot Enterprise customer data to train AI models.\" AppSec is reviewing the full data handling details as part of this pilot.",
         },
         {
           q: "What about PCI-scoped code?",
@@ -331,9 +338,9 @@ Priya`,
   ],
 
   spend: [
-    { monthsAgo: 2, seat: 3900, premium: 180 },
-    { monthsAgo: 1, seat: 3900, premium: 290 },
-    { monthsAgo: 0, seat: 3900, premium: 410 },
+    { monthsAgo: 2, seat: 3900, usage: 180 },
+    { monthsAgo: 1, seat: 3900, usage: 290 },
+    { monthsAgo: 0, seat: 3900, usage: 410 },
   ],
 
   questions: [],

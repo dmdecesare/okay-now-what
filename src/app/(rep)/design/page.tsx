@@ -80,7 +80,7 @@ export default function DesignPage() {
         <SectionHeader title="Numbers and progress" />
         <Card className="grid gap-6 sm:grid-cols-3">
           <Stat label="Active seats" value="82 of 100" sub="Up 8 since last check-in" trend="up" />
-          <Stat label="Monthly spend" value="$29,680" sub="Premium requests down 18%" trend="down" />
+          <Stat label="Monthly spend" value="$29,680" sub="Additional usage down 18%" trend="down" />
           <Stat label="Plan progress" value="4 of 9" sub="Milestones done" />
           <ProgressBar value={82} label="Weekly active pilot users" className="sm:col-span-3" />
         </Card>

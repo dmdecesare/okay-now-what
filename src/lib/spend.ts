@@ -5,15 +5,15 @@ import { formatMonth } from "./format";
 /** Usage-based spend drop that counts as a risk signal (see SPEC 5.4 and lib/health.ts). */
 export const SPEND_DROP_PCT = 15;
 
-type Month = { month: string; seatSpend: number; premiumRequestSpend: number };
+type Month = { month: string; seatSpend: number; usageSpend: number };
 
 export type SpendSummary = {
-  months: { month: string; label: string; seat: number; premium: number; total: number }[];
-  current: { seat: number; premium: number; total: number } | null;
+  months: { month: string; label: string; seat: number; usage: number; total: number }[];
+  current: { seat: number; usage: number; total: number } | null;
   /** Total spend vs last month, in percent. */
   changeVsLastMonth: number | null;
-  /** Premium request spend over the last two months, in percent. */
-  premiumTwoMonthChange: number | null;
+  /** Additional usage over the last two months, in percent. */
+  usageTwoMonthChange: number | null;
   dropping: boolean;
 };
 
@@ -27,20 +27,20 @@ export function summarizeSpend(spend: Month[]): SpendSummary {
     month: m.month,
     label: formatMonth(m.month),
     seat: m.seatSpend,
-    premium: m.premiumRequestSpend,
-    total: m.seatSpend + m.premiumRequestSpend,
+    usage: m.usageSpend,
+    total: m.seatSpend + m.usageSpend,
   }));
 
   const last = months.at(-1);
   const prev = months.at(-2);
   const twoBack = months.at(-3);
-  const premiumTwoMonthChange = last && twoBack ? pctChange(twoBack.premium, last.premium) : null;
+  const usageTwoMonthChange = last && twoBack ? pctChange(twoBack.usage, last.usage) : null;
 
   return {
     months,
-    current: last ? { seat: last.seat, premium: last.premium, total: last.total } : null,
+    current: last ? { seat: last.seat, usage: last.usage, total: last.total } : null,
     changeVsLastMonth: last && prev ? pctChange(prev.total, last.total) : null,
-    premiumTwoMonthChange,
-    dropping: premiumTwoMonthChange != null && premiumTwoMonthChange <= -SPEND_DROP_PCT,
+    usageTwoMonthChange,
+    dropping: usageTwoMonthChange != null && usageTwoMonthChange <= -SPEND_DROP_PCT,
   };
 }

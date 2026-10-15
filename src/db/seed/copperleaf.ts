@@ -97,6 +97,7 @@ export const copperleaf: SeedAccount = {
     setupSteps: [
       {
         id: "exclude-credit",
+        docs: ["content-exclusion-howto", "content-exclusion-about"],
         title: "Exclude loan decisioning and credit model code",
         why: "The CISO asked for these repositories to be kept out of Copilot.",
         steps: [
@@ -108,11 +109,12 @@ export const copperleaf: SeedAccount = {
       },
       {
         id: "audit-story",
+        docs: ["audit-logs", "approval-resources"],
         title: "Build the audit story for regulators",
         why: "State and CFPB exams came up. The CISO needs to show how AI use is governed.",
         steps: [
           "Write down your Copilot policies and who approved them",
-          "Use the enterprise audit log to track Copilot admin activity like policy changes and seat assignments",
+          "Use the enterprise audit log to track changes to Copilot settings, policies, and licenses, plus agent activity on GitHub",
           "Keep a record of content exclusions and when they changed",
           "Export usage metrics monthly as evidence of controlled rollout",
         ],
@@ -120,6 +122,7 @@ export const copperleaf: SeedAccount = {
       },
       {
         id: "policies",
+        docs: ["org-policies", "enterprise-policies"],
         title: "Set Copilot policies and the public code filter",
         why: "Clear, documented settings are the base of the audit story.",
         steps: [
@@ -131,6 +134,7 @@ export const copperleaf: SeedAccount = {
       },
       {
         id: "seats",
+        docs: ["seat-assignment", "remind-inactive"],
         title: "Manage seats for 550 developers",
         why: "Every developer needs a seat to hit Dan's weekly-use goal.",
         steps: [
@@ -142,6 +146,7 @@ export const copperleaf: SeedAccount = {
       },
       {
         id: "ide-setup",
+        docs: ["install-extension", "ide-quickstart"],
         title: "Standard setup for VS Code and JetBrains",
         why: "Most teams use VS Code, and some use JetBrains. One guide each keeps DevEx out of support tickets.",
         steps: [
@@ -153,6 +158,7 @@ export const copperleaf: SeedAccount = {
       },
       {
         id: "metrics",
+        docs: ["view-usage", "drive-adoption"],
         title: "Turn on usage metrics",
         why: "Weekly active use is Dan's goal and the CFO's evidence.",
         steps: [
@@ -201,7 +207,7 @@ Dan`,
         },
         {
           q: "Is our code used for training?",
-          a: "GitHub states that it does not use Copilot Business or Enterprise customers' code to train its models. Our CISO has reviewed the data handling details as part of this rollout.",
+          a: "No. GitHub's documentation says: \"GitHub does not use Copilot Business or Copilot Enterprise customer data to train AI models.\" Our CISO has reviewed the data handling details as part of this rollout.",
         },
         {
           q: "Why can't I use Copilot in the credit model repos?",
@@ -224,7 +230,7 @@ Dan`,
       { topic: "writing-tests", why: "Quick, visible time savings for every team" },
       { topic: "track-admins", why: "Seat management and policy settings for 550 seats" },
       { topic: "track-security", why: "Content exclusions and the audit story for the CISO" },
-      { topic: "premium-requests", why: "Keeps spend predictable ahead of the CFO review" },
+      { topic: "ai-credits", why: "Keeps spend predictable ahead of the CFO review" },
     ],
   },
 
@@ -296,29 +302,29 @@ Dan`,
 
   spend: [
     // Informal two-team rollout on 60 seats before the purchase.
-    { monthsAgo: 1, seat: 2340, premium: 90 },
-    { monthsAgo: 0, seat: 21450, premium: 600 },
+    { monthsAgo: 1, seat: 2340, usage: 90 },
+    { monthsAgo: 0, seat: 21450, usage: 600 },
   ],
 
   questions: [
     {
       question: "How do I exclude our loan decisioning repo from Copilot?",
       answer:
-        "An organization owner can add the repository under content exclusions in the organization's Copilot settings. You can exclude a whole repository or specific paths. Once it's saved, Copilot won't use those files as context or offer suggestions in them. Test it by opening an excluded file in VS Code and JetBrains.",
+        "Add the repository under content exclusions in your organization's Copilot settings, or in the repository's own settings. You can exclude a whole repository or specific paths. Once it's saved, Copilot won't use those files as context or offer suggestions in them. Test it by opening an excluded file in VS Code and JetBrains.",
       topic: "security",
       daysAgo: 9,
     },
     {
       question: "What do I tell our CISO about where code goes?",
       answer:
-        "Point them to GitHub's Copilot Trust Center, which covers how prompts and suggestions are handled and retained. The key points for your CISO: GitHub states it does not use Copilot Business or Enterprise customers' code to train its models, and content exclusions keep your most sensitive repositories out of Copilot entirely.",
+        "Send them GitHub's \"Resources for getting approval of GitHub Copilot\" page. It collects the terms, data protection agreement, and trust center links security teams ask for. The key points for your CISO: GitHub's documentation says it does not use Copilot Business or Copilot Enterprise customer data to train AI models, and content exclusions keep your most sensitive repositories out of Copilot.",
       topic: "security",
       daysAgo: 3,
     },
     {
       question: "Is there an audit log for Copilot usage?",
       answer:
-        "Yes. The enterprise and organization audit logs record Copilot admin activity, like policy changes and seat assignments. For usage, Copilot usage metrics show active users and activity over time. Together they make a good base for the audit story your regulators will ask about.",
+        "Partly. The enterprise audit log records changes to Copilot settings, policies, and licenses, plus agent activity on GitHub. It does not include the prompts people send from their editor. For usage, the Copilot usage metrics dashboard shows active users over time. Together they give you a solid base for the audit story your regulators will ask about.",
       topic: "compliance",
       daysAgo: 1,
     },

@@ -23,7 +23,7 @@ export type HealthInput = {
   championName?: string | null;
   championLastVisitAt: Date | null;
   usage: { date: string; activeSeats: number }[];
-  spend: { month: string; seatSpend: number; premiumRequestSpend: number }[];
+  spend: { month: string; seatSpend: number; usageSpend: number }[];
   milestones: { dueDate: string; status: MilestoneStatus }[];
   questions: { topic: QuestionTopic; askedAt: Date }[];
 };
@@ -31,7 +31,7 @@ export type HealthInput = {
 export const THRESHOLDS = {
   adoptionDropPoints: 10,
   adoptionWindowDays: ADOPTION_WINDOW_DAYS,
-  // Applied to usage-based (premium request) spend. Seat spend is contractual and
+  // Applied to additional usage (AI credits beyond the included pool). Seat spend is contractual and
   // rarely moves mid-term, so a drop in usage spend is the meaningful signal.
   spendDropPct: SPEND_DROP_PCT,
   championQuietDays: 14,
@@ -55,7 +55,7 @@ export const activePct = pct;
 /** Plain-English versions of the rules, shown on the Health tab. */
 export const RULES: { key: SignalKey; text: string }[] = [
   { key: "adoption_drop", text: "Active seats drop 10 or more points over 30 days" },
-  { key: "spend_drop", text: "Premium request spend drops 15% or more over two months" },
+  { key: "spend_drop", text: "Additional usage spend drops 15% or more over two months" },
   { key: "champion_quiet", text: "Champion hasn't opened the customer app in 14 or more days" },
   { key: "milestones_overdue", text: "Two or more plan milestones are overdue" },
   { key: "security_questions", text: "Three or more security or compliance questions in a week" },
@@ -87,14 +87,14 @@ export function assessHealth(input: HealthInput): { status: HealthStatus; signal
   // 2. Usage-based spend down 15%+ over the last two months.
   const spend = [...input.spend].sort((a, b) => a.month.localeCompare(b.month));
   if (spend.length >= 3) {
-    const base = spend.at(-3)!.premiumRequestSpend;
-    const last = spend.at(-1)!.premiumRequestSpend;
+    const base = spend.at(-3)!.usageSpend;
+    const last = spend.at(-1)!.usageSpend;
     if (base > 0) {
       const dropPct = Math.round(((base - last) / base) * 100);
       if (dropPct >= THRESHOLDS.spendDropPct) {
         signals.push({
           key: "spend_drop",
-          label: `Premium request spend down ${dropPct}% over two months`,
+          label: `Additional usage down ${dropPct}% over two months`,
           detail: `$${base.toLocaleString("en-US")} to $${last.toLocaleString("en-US")} a month.`,
         });
       }

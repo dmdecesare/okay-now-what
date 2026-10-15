@@ -3,6 +3,8 @@ import { Card } from "@/components/ui/card";
 import { CopyButton } from "@/components/ui/copy-button";
 import { TabSkeleton } from "@/components/account/tab-skeleton";
 import type { AccountProfile } from "@/lib/schemas";
+import { docLinks } from "@/lib/resources";
+import { DocLinkList } from "@/components/customer/doc-link-list";
 import { loadCustomer } from "../data";
 
 type Audience = AccountProfile["setupSteps"][number]["audience"];
@@ -56,6 +58,7 @@ async function Setup({ params }: { params: PageProps<"/c/[token]/setup">["params
                       <li key={step}>{step}</li>
                     ))}
                   </ol>
+                  <DocLinkList links={docLinks(s.docs)} heading="Read the docs" />
                   <div className="mt-auto pt-1">
                     <CopyButton
                       text={`${s.title}\n\n${s.steps.map((step, i) => `${i + 1}. ${step}`).join("\n")}`}

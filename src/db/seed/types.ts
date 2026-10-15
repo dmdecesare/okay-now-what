@@ -33,7 +33,7 @@ export type SeedAccount = {
     completedBy?: "rep" | "customer";
   }[];
   usage: { daysAgo: number; teams: TeamUsage[] }[];
-  spend: { monthsAgo: number; seat: number; premium: number }[];
+  spend: { monthsAgo: number; seat: number; usage: number }[];
   questions: { question: string; answer: string; topic: QuestionTopic; daysAgo: number }[];
   /** Pre-written "Claude's take" so the demo loads instantly. Phase 5 replaces these live. */
   insights: Partial<InsightContent>;

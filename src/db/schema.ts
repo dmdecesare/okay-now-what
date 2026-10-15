@@ -88,7 +88,7 @@ export const spendMonths = pgTable(
     /** First day of the billing month. */
     month: date("month", { mode: "string" }).notNull(),
     seatSpend: integer("seat_spend").notNull(),
-    premiumRequestSpend: integer("premium_request_spend").notNull(),
+    usageSpend: integer("usage_spend").notNull(),
   },
   (t) => [index("spend_account_idx").on(t.accountId)],
 );
