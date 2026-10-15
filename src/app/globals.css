@@ -27,11 +27,12 @@
   --risk: #b42318;
   --risk-soft: #fdeeec;
 
-  /* Charts: accent first, then a cool neutral and a warm contrast. */
-  --chart-1: #0f766e;
-  --chart-2: #94a3b8;
-  --chart-3: #d97706;
+  /* Chart marks. Validated with the dataviz palette checker (lightness, chroma, colorblind
+     separation, contrast). The UI accent is too gray for marks, so charts use a brighter teal. */
+  --chart-1: #0d9488;
+  --chart-2: #d97706;
   --chart-grid: #e8ecea;
+  --chart-axis: #8a9590;
 }
 
 @theme inline {
@@ -55,7 +56,6 @@
   --color-risk-soft: var(--risk-soft);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 

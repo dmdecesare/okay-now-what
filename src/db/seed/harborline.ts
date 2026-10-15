@@ -337,4 +337,26 @@ Priya`,
   ],
 
   questions: [],
+
+  insights: {
+    next_best_action: {
+      actions: [
+        {
+          title: "Lock in AppSec sign-off before day 30",
+          detail:
+            "Send AppSec the data handling summary this week. Security sign-off is the one success criterion still open, and it gates the CTO decision.",
+        },
+        {
+          title: "Turn the mobile team around",
+          detail:
+            "Mobile is at 60% active, the lowest of the four teams. Run the Chat and agent mode session on their own code before day 28.",
+        },
+        {
+          title: "Start the CTO readout now",
+          detail:
+            "Weekly active use (82%) and satisfaction (4.2) already beat target. Draft the readout early and add the final PR cycle time number at day 55.",
+        },
+      ],
+    },
+  },
 };

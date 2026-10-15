@@ -310,4 +310,48 @@ Elena`,
       daysAgo: 4,
     },
   ],
+
+  insights: {
+    risk_play: {
+      reason: "Claims team adoption collapsed, and Elena has been quiet for 22 days.",
+      explanation:
+        "Seat activity fell from an 84% peak to 71%, almost all of it on the claims platform team (75% down to 28%). Premium request spend is down 18% over two months, both overdue milestones are claims team work, and Elena may be pulled into a Q4 reorg. Renewal is about nine months out, so this is the window to fix it.",
+      play: {
+        title: "Win back the claims team",
+        steps: [
+          "Send Elena a short, forwardable update and ask for 20 minutes this week",
+          "Ship custom instructions for the claims repo before the session, so the first impression changes",
+          "Reschedule the claims enablement session with the team lead, focused on legacy Java",
+          "Ask Elena to name a second champion on the claims or platform team",
+          "Send the CIO update leading with the policy admin and data team wins",
+        ],
+      },
+    },
+    next_best_action: {
+      actions: [
+        {
+          title: "Fix the claims team experience first",
+          detail:
+            "Claims platform is at 28% active, down from 75%. Custom instructions for the claims repo address their main complaint about old Java.",
+        },
+        {
+          title: "Reschedule the claims enablement session",
+          detail: "It's 15 days overdue. Run it with the claims team lead, using their own legacy code.",
+        },
+        {
+          title: "Re-engage Elena",
+          detail:
+            "She hasn't opened the customer app in 22 days. Send a short update she can forward to the CIO, and ask for a second champion.",
+        },
+      ],
+    },
+    question_themes: {
+      summary:
+        "Both questions are about getting better results on legacy Java. They line up with the claims team's drop in usage.",
+      themes: [
+        { theme: "Legacy Java", count: 1, note: "Suggestions on old Java code are weak." },
+        { theme: "Setup", count: 1, note: "How to add custom instructions for one repository." },
+      ],
+    },
+  },
 };

@@ -24,3 +24,14 @@ A few lines per session. This feeds pages 5 and 6 of the PDF.
 **Anything that surprised me about Claude:**
 - It found two places where my spec contradicted itself (Bluestone's spend math and Copperleaf's question count) and proposed fixes before writing code.
 **Screenshot to capture for the PDF:** Book of business with Bluestone marked At risk.
+
+## Session 2: Phase 2, rep home and account tabs (2026-10-15)
+
+**Date and time spent:**
+**What I asked Claude Code to do:** Plan and build the book of business with the at-risk panel, and the account detail tabs (overview, plan, adoption, spend, health, questions, tools) with charts.
+**What worked on the first try:**
+**What broke and how we fixed it:**
+- The app's teal looked too gray for chart marks, according to Claude's color checker. Charts now use a brighter teal with amber, which passed the colorblind and contrast checks.
+- Premium request spend is under a tenth of seat spend, so its 18% drop disappeared in a stacked chart. Claude split it into its own chart so the drop is obvious.
+**Anything that surprised me about Claude:**
+**Screenshot to capture for the PDF:** Book of business with the Needs attention panel; Bluestone's Adoption tab (peak 84%, claims team down 41 points); Bluestone's Spend tab.

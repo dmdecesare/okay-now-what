@@ -81,6 +81,48 @@ export type MilestoneStatus = (typeof MILESTONE_STATUSES)[number];
 export const QUESTION_TOPICS = ["security", "compliance", "setup", "usage", "other"] as const;
 export type QuestionTopic = (typeof QUESTION_TOPICS)[number];
 
+// AI insights shown on the rep side. Pre-written for the demo accounts (source "seed"),
+// generated live by Claude from Phase 5 on (source "live").
+
+export const riskPlaySchema = z.object({
+  reason: z.string().describe("One line for the at-risk panel"),
+  explanation: z.string().describe("Two or three sentences on what is going on"),
+  play: z.object({
+    title: z.string(),
+    steps: z.array(z.string()).min(1).max(5),
+  }),
+});
+export type RiskPlay = z.infer<typeof riskPlaySchema>;
+
+export const nextBestActionSchema = z.object({
+  actions: z
+    .array(z.object({ title: z.string(), detail: z.string() }))
+    .min(1)
+    .max(3),
+});
+export type NextBestAction = z.infer<typeof nextBestActionSchema>;
+
+export const questionThemesSchema = z.object({
+  summary: z.string(),
+  themes: z.array(z.object({ theme: z.string(), count: z.number().int(), note: z.string() })),
+});
+export type QuestionThemes = z.infer<typeof questionThemesSchema>;
+
+export const INSIGHT_KINDS = ["risk_play", "next_best_action", "question_themes"] as const;
+export type InsightKind = (typeof INSIGHT_KINDS)[number];
+
+export type InsightContent = {
+  risk_play: RiskPlay;
+  next_best_action: NextBestAction;
+  question_themes: QuestionThemes;
+};
+
+export const insightSchemas = {
+  risk_play: riskPlaySchema,
+  next_best_action: nextBestActionSchema,
+  question_themes: questionThemesSchema,
+} as const;
+
 export const MATERIAL_KINDS = [
   "launch_email",
   "enablement_agenda",

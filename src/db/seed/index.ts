@@ -1,11 +1,12 @@
 import { randomBytes } from "node:crypto";
 import { count } from "drizzle-orm";
-import { accountProfileSchema } from "@/lib/schemas";
+import { accountProfileSchema, insightSchemas, type InsightKind } from "@/lib/schemas";
 import { addDays, monthStart, todayISO } from "@/lib/dates";
 import type { DB } from "../client";
 import {
   accountProfiles,
   accounts,
+  aiInsights,
   customerQuestions,
   generatedMaterials,
   milestones,
@@ -36,6 +37,7 @@ export async function seedIfEmpty(db: DB): Promise<boolean> {
 /** Deletes everything and reloads the three demo accounts. */
 export async function resetAndSeed(db: DB): Promise<void> {
   // Children first, then accounts. (No transaction: Neon's HTTP driver does not support them.)
+  await db.delete(aiInsights);
   await db.delete(generatedMaterials);
   await db.delete(customerQuestions);
   await db.delete(spendMonths);
@@ -109,6 +111,15 @@ async function insertSeed(db: DB, now: Date = new Date()): Promise<void> {
         premiumRequestSpend: m.premium,
       })),
     );
+
+    const insightRows = (Object.keys(s.insights) as InsightKind[]).map((kind) => ({
+      accountId,
+      kind,
+      content: insightSchemas[kind].parse(s.insights[kind]),
+      source: "seed" as const,
+      generatedAt: now,
+    }));
+    if (insightRows.length > 0) await db.insert(aiInsights).values(insightRows);
 
     if (s.questions.length > 0) {
       await db.insert(customerQuestions).values(

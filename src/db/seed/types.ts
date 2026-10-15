@@ -1,5 +1,6 @@
 import type {
   AccountProfile,
+  InsightContent,
   MilestoneStatus,
   QuestionTopic,
   Stage,
@@ -34,6 +35,8 @@ export type SeedAccount = {
   usage: { daysAgo: number; teams: TeamUsage[] }[];
   spend: { monthsAgo: number; seat: number; premium: number }[];
   questions: { question: string; answer: string; topic: QuestionTopic; daysAgo: number }[];
+  /** Pre-written "Claude's take" so the demo loads instantly. Phase 5 replaces these live. */
+  insights: Partial<InsightContent>;
 };
 
 /** Builds per-team usage rows from team definitions and active counts in the same order. */

@@ -1,18 +1,40 @@
-import { asc, eq } from "drizzle-orm";
+import { cache } from "react";
+import { asc, desc, eq } from "drizzle-orm";
 import { assessHealth, activePct, type HealthStatus, type Signal } from "@/lib/health";
 import { stageDay } from "@/lib/dates";
-import type { AccountProfile, Stage } from "@/lib/schemas";
+import {
+  insightSchemas,
+  type AccountProfile,
+  type InsightContent,
+  type InsightKind,
+  type Stage,
+} from "@/lib/schemas";
 import { getDb } from "./client";
 import {
   accountProfiles,
   accounts,
+  aiInsights,
   customerQuestions,
   milestones,
   spendMonths,
   usageSnapshots,
+  type Account,
+  type CustomerQuestion,
+  type Milestone,
+  type SpendMonth,
+  type UsageSnapshot,
 } from "./schema";
 
 export type SpendTrend = "up" | "down" | "flat" | "none";
+
+export type Insight<K extends InsightKind> = {
+  content: InsightContent[K];
+  source: "seed" | "live";
+  generatedAt: Date;
+};
+export type Insights = { [K in InsightKind]?: Insight<K> };
+
+export type Health = { status: HealthStatus; signals: Signal[] };
 
 export type AccountSummary = {
   id: string;
@@ -24,8 +46,10 @@ export type AccountSummary = {
   seats: number;
   activeSeats: number | null;
   activePct: number | null;
+  monthlySpend: number | null;
   spendTrend: SpendTrend;
-  health: { status: HealthStatus; signals: Signal[] };
+  health: Health;
+  riskPlay?: Insight<"risk_play">;
 };
 
 function groupBy<T, K>(rows: T[], key: (r: T) => K): Map<K, T[]> {
@@ -49,16 +73,55 @@ function spendTrend(spend: { month: string; seatSpend: number; premiumRequestSpe
   return "flat";
 }
 
+/** Validates stored insight JSON; anything that doesn't match its schema is skipped. */
+function toInsights(rows: (typeof aiInsights.$inferSelect)[]): Insights {
+  const out: Insights = {};
+  for (const r of rows) {
+    const parsed = insightSchemas[r.kind]?.safeParse(r.content);
+    if (!parsed?.success) continue;
+    (out as Record<string, unknown>)[r.kind] = {
+      content: parsed.data,
+      source: r.source,
+      generatedAt: r.generatedAt,
+    };
+  }
+  return out;
+}
+
+function healthFor(
+  a: Account,
+  profile: AccountProfile | undefined,
+  data: {
+    usage: UsageSnapshot[];
+    spend: SpendMonth[];
+    milestones: Milestone[];
+    questions: CustomerQuestion[];
+  },
+  now: Date,
+): Health {
+  return assessHealth({
+    now,
+    seats: a.seats,
+    championName: profile?.champion.name,
+    championLastVisitAt: a.championLastVisitAt,
+    usage: data.usage,
+    spend: data.spend,
+    milestones: data.milestones,
+    questions: data.questions,
+  });
+}
+
 /** Every account with its latest usage, spend trend, and health. Rep side only. */
 export async function listAccountSummaries(now: Date = new Date()): Promise<AccountSummary[]> {
   const db = await getDb();
-  const [accts, profiles, usage, spend, ms, qs] = await Promise.all([
+  const [accts, profiles, usage, spend, ms, qs, insights] = await Promise.all([
     db.select().from(accounts).orderBy(asc(accounts.createdAt), asc(accounts.name)),
     db.select().from(accountProfiles),
     db.select().from(usageSnapshots).orderBy(asc(usageSnapshots.date)),
     db.select().from(spendMonths).orderBy(asc(spendMonths.month)),
     db.select().from(milestones),
     db.select().from(customerQuestions),
+    db.select().from(aiInsights),
   ]);
 
   const profileBy = new Map(profiles.map((p) => [p.accountId, p.data]));
@@ -66,11 +129,13 @@ export async function listAccountSummaries(now: Date = new Date()): Promise<Acco
   const spendBy = groupBy(spend, (s) => s.accountId);
   const msBy = groupBy(ms, (m) => m.accountId);
   const qsBy = groupBy(qs, (q) => q.accountId);
+  const insightsBy = groupBy(insights, (i) => i.accountId);
 
   return accts.map((a) => {
     const u = usageBy.get(a.id) ?? [];
     const s = spendBy.get(a.id) ?? [];
     const latest = u.at(-1);
+    const lastMonth = s.at(-1);
     return {
       id: a.id,
       slug: a.slug,
@@ -81,20 +146,69 @@ export async function listAccountSummaries(now: Date = new Date()): Promise<Acco
       seats: a.seats,
       activeSeats: latest?.activeSeats ?? null,
       activePct: latest ? activePct(latest.activeSeats, a.seats) : null,
+      monthlySpend: lastMonth ? lastMonth.seatSpend + lastMonth.premiumRequestSpend : null,
       spendTrend: spendTrend(s),
-      health: assessHealth({
+      health: healthFor(
+        a,
+        profileBy.get(a.id),
+        { usage: u, spend: s, milestones: msBy.get(a.id) ?? [], questions: qsBy.get(a.id) ?? [] },
         now,
-        seats: a.seats,
-        championName: profileBy.get(a.id)?.champion.name,
-        championLastVisitAt: a.championLastVisitAt,
-        usage: u,
-        spend: s,
-        milestones: msBy.get(a.id) ?? [],
-        questions: qsBy.get(a.id) ?? [],
-      }),
+      ),
+      riskPlay: toInsights(insightsBy.get(a.id) ?? []).risk_play,
     };
   });
 }
+
+export type AccountDetail = {
+  account: Account;
+  profile: AccountProfile;
+  stageDay: number;
+  milestones: Milestone[];
+  usage: UsageSnapshot[];
+  spend: SpendMonth[];
+  /** Newest first. */
+  questions: CustomerQuestion[];
+  insights: Insights;
+  health: Health;
+};
+
+/** Everything the rep sees for one account. Deduped per request across layout and tab. */
+export const getAccountDetail = cache(async (slug: string): Promise<AccountDetail | null> => {
+  const db = await getDb();
+  const [row] = await db
+    .select({ account: accounts, profile: accountProfiles.data })
+    .from(accounts)
+    .innerJoin(accountProfiles, eq(accountProfiles.accountId, accounts.id))
+    .where(eq(accounts.slug, slug))
+    .limit(1);
+  if (!row) return null;
+
+  const id = row.account.id;
+  const [ms, usage, spend, questions, insights] = await Promise.all([
+    db.select().from(milestones).where(eq(milestones.accountId, id)).orderBy(asc(milestones.sortOrder)),
+    db.select().from(usageSnapshots).where(eq(usageSnapshots.accountId, id)).orderBy(asc(usageSnapshots.date)),
+    db.select().from(spendMonths).where(eq(spendMonths.accountId, id)).orderBy(asc(spendMonths.month)),
+    db
+      .select()
+      .from(customerQuestions)
+      .where(eq(customerQuestions.accountId, id))
+      .orderBy(desc(customerQuestions.askedAt)),
+    db.select().from(aiInsights).where(eq(aiInsights.accountId, id)),
+  ]);
+
+  const now = new Date();
+  return {
+    account: row.account,
+    profile: row.profile,
+    stageDay: stageDay(row.account.stageStartDate, now),
+    milestones: ms,
+    usage,
+    spend,
+    questions,
+    insights: toInsights(insights),
+    health: healthFor(row.account, row.profile, { usage, spend, milestones: ms, questions }, now),
+  };
+});
 
 /**
  * What the customer app is allowed to see. Built field by field so internal data
@@ -146,13 +260,4 @@ export async function getCustomerAccountByToken(token: string): Promise<Customer
       guides: p.guides,
     },
   };
-}
-
-/** Rep-side helper for building share links. */
-export async function listCustomerLinks(): Promise<{ slug: string; name: string; token: string }[]> {
-  const db = await getDb();
-  return db
-    .select({ slug: accounts.slug, name: accounts.name, token: accounts.customerToken })
-    .from(accounts)
-    .orderBy(asc(accounts.createdAt), asc(accounts.name));
 }

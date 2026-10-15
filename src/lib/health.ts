@@ -1,5 +1,7 @@
 import type { MilestoneStatus, QuestionTopic } from "./schemas";
-import { addDays, daysBetween, todayISO } from "./dates";
+import { daysBetween, todayISO } from "./dates";
+import { ADOPTION_WINDOW_DAYS, baselineSnapshot, pct, sortSnapshots } from "./adoption";
+import { SPEND_DROP_PCT } from "./spend";
 
 // At-risk rules from SPEC section 5.4. Pure: data in, status and signals out.
 // Claude writes the plain-English explanation and recovery play on top of these (Phase 5).
@@ -28,10 +30,10 @@ export type HealthInput = {
 
 export const THRESHOLDS = {
   adoptionDropPoints: 10,
-  adoptionWindowDays: 30,
+  adoptionWindowDays: ADOPTION_WINDOW_DAYS,
   // Applied to usage-based (premium request) spend. Seat spend is contractual and
   // rarely moves mid-term, so a drop in usage spend is the meaningful signal.
-  spendDropPct: 15,
+  spendDropPct: SPEND_DROP_PCT,
   championQuietDays: 14,
   overdueMilestones: 2,
   securityQuestions: 3,
@@ -48,9 +50,16 @@ export function isOverdue(m: { dueDate: string; status: MilestoneStatus }, today
   return m.status !== "done" && m.dueDate < today;
 }
 
-export function activePct(activeSeats: number, seats: number): number {
-  return seats > 0 ? Math.round((activeSeats / seats) * 100) : 0;
-}
+export const activePct = pct;
+
+/** Plain-English versions of the rules, shown on the Health tab. */
+export const RULES: { key: SignalKey; text: string }[] = [
+  { key: "adoption_drop", text: "Active seats drop 10 or more points over 30 days" },
+  { key: "spend_drop", text: "Premium request spend drops 15% or more over two months" },
+  { key: "champion_quiet", text: "Champion hasn't opened the customer app in 14 or more days" },
+  { key: "milestones_overdue", text: "Two or more plan milestones are overdue" },
+  { key: "security_questions", text: "Three or more security or compliance questions in a week" },
+];
 
 export function assessHealth(input: HealthInput): { status: HealthStatus; signals: Signal[] } {
   const now = input.now ?? new Date();
@@ -58,11 +67,10 @@ export function assessHealth(input: HealthInput): { status: HealthStatus; signal
   const signals: Signal[] = [];
 
   // 1. % active seats down 10+ points over the last 30 days.
-  const usage = [...input.usage].sort((a, b) => a.date.localeCompare(b.date));
+  const usage = sortSnapshots(input.usage);
   const latest = usage.at(-1);
   if (latest) {
-    const windowStart = addDays(latest.date, -THRESHOLDS.adoptionWindowDays);
-    const baseline = usage.find((u) => u.date >= windowStart && u.date < latest.date);
+    const baseline = baselineSnapshot(usage);
     if (baseline) {
       const from = activePct(baseline.activeSeats, input.seats);
       const to = activePct(latest.activeSeats, input.seats);

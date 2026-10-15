@@ -11,6 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 import type {
   AccountProfile,
+  InsightKind,
   MaterialKind,
   MilestoneStatus,
   QuestionTopic,
@@ -119,6 +120,22 @@ export const generatedMaterials = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("materials_account_kind_idx").on(t.accountId, t.kind)],
+);
+
+export const aiInsights = pgTable(
+  "ai_insights",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    accountId: uuid("account_id")
+      .notNull()
+      .references(() => accounts.id, { onDelete: "cascade" }),
+    kind: text("kind").$type<InsightKind>().notNull(),
+    /** Validated against insightSchemas[kind] before it is saved. */
+    content: jsonb("content").notNull(),
+    source: text("source").$type<"seed" | "live">().notNull(),
+    generatedAt: timestamp("generated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("insights_account_kind_idx").on(t.accountId, t.kind)],
 );
 
 export type Account = typeof accounts.$inferSelect;

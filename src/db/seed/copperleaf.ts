@@ -323,4 +323,34 @@ Dan`,
       daysAgo: 1,
     },
   ],
+
+  insights: {
+    next_best_action: {
+      actions: [
+        {
+          title: "Get the slowest teams live",
+          detail:
+            "Data and credit models (11% active) and Mobile (25%) are furthest behind. Book DevEx sessions with both this week.",
+        },
+        {
+          title: "Close the CISO's open items",
+          detail:
+            "Finish content exclusions and audit log setup by day 14. All three questions from Copperleaf so far were about security or compliance.",
+        },
+        {
+          title: "Make DevEx's job easier",
+          detail:
+            "Send the three-person DevEx team the champion kit before the train-the-trainer session, so they run sessions instead of writing them.",
+        },
+      ],
+    },
+    question_themes: {
+      summary:
+        "All three questions are about security and compliance. The CISO's concerns from the deal are reaching the team, so the exclusions and audit story should go out soon.",
+      themes: [
+        { theme: "Security", count: 2, note: "Where code goes, and how to exclude the loan decisioning repo." },
+        { theme: "Compliance", count: 1, note: "Audit logging for state and CFPB exams." },
+      ],
+    },
+  },
 };
