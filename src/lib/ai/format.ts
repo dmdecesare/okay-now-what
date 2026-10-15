@@ -9,6 +9,16 @@ export function noEmDash(text: string): string {
   return text.replace(/\s*\u2014\s*/g, ", ");
 }
 
+/** Recursively removes em dashes from every string in generated JSON. */
+export function cleanStrings<T>(value: T): T {
+  if (typeof value === "string") return noEmDash(value) as T;
+  if (Array.isArray(value)) return value.map(cleanStrings) as T;
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, cleanStrings(v)])) as T;
+  }
+  return value;
+}
+
 /** Normalizes a URL for catalog lookup (drops trailing slashes and #anchors). */
 function catalogKey(url: string): DocKey | undefined {
   const clean = url.replace(/#.*$/, "").replace(/\/$/, "");

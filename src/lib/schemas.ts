@@ -69,6 +69,53 @@ export const accountProfileSchema = z.object({
 });
 
 export type AccountProfile = z.infer<typeof accountProfileSchema>;
+
+// ---------------------------------------------------------------------------
+// Add account (Phase 6): the rep's form input, and the two halves Claude builds.
+// ---------------------------------------------------------------------------
+
+const optionalInt = (min: number, max: number) => z.number().int().min(min).max(max).optional();
+
+export const newAccountInputSchema = z.object({
+  name: z.string().trim().min(2, "Add the company name").max(80),
+  industry: z.string().trim().min(2, "Add the industry").max(60),
+  seats: z.number({ message: "Add the number of seats" }).int().min(1, "Seats must be at least 1").max(100000),
+  stage: z.enum(STAGES),
+  notes: z
+    .string()
+    .trim()
+    .min(40, "Paste a bit more from your deal notes (at least a few sentences)")
+    .max(8000, "That's a lot of notes. Trim them to 8,000 characters or fewer"),
+  employees: optionalInt(1, 1_000_000),
+  pilotLengthDays: optionalInt(7, 180),
+  stageDay: optionalInt(1, 365),
+  renewalMonths: optionalInt(1, 36),
+});
+export type NewAccountInput = z.infer<typeof newAccountInputSchema>;
+
+export const milestoneDraftSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  dueDay: z.number().int().min(1).max(400).describe("Day of the stage it's due, where day 1 is the stage start"),
+  alreadyDone: z.boolean().describe("True only if the notes say it already happened"),
+});
+
+/** Call A: plan and people. */
+export const buildPlanSchema = accountProfileSchema
+  .pick({
+    summary: true,
+    goals: true,
+    champion: true,
+    stakeholders: true,
+    concerns: true,
+    successCriteria: true,
+    thisWeek: true,
+    guides: true,
+  })
+  .extend({ milestones: z.array(milestoneDraftSchema).min(6).max(10) });
+
+/** Call B: setup guide and champion kit. */
+export const buildKitSchema = accountProfileSchema.pick({ setupSteps: true, championKit: true });
 export type SuccessCriterion = z.infer<typeof successCriterionSchema>;
 
 export const teamUsageSchema = z.object({

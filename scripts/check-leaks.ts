@@ -65,6 +65,16 @@ async function main() {
     const token = repPage.match(/\/c\/([A-Za-z0-9_-]{32,64})/)?.[1];
     if (!token) throw new Error(`No customer link found for ${slug}.`);
 
+    // Accounts built live aren't in the seed, so also treat this account's own deal
+    // notes (shown on the rep Overview) as rep-only text.
+    const repVisible = repPage.replace(/<script[\s\S]*?<\/script>/g, "");
+    const notes = repVisible.match(/<p class="whitespace-pre-wrap[^"]*"[^>]*>([\s\S]*?)<\/p>/)?.[1] ?? "";
+    if (!notes) throw new Error(`Couldn't find the deal notes for ${slug} on the rep page.`);
+    const accountMarkers = notes
+      .split(/[.\n]/)
+      .map((sentence) => norm(sentence).slice(0, 60))
+      .filter((m) => m.length >= 25);
+
     for (const tab of CUSTOMER_TABS) {
       const url = `${BASE}/c/${token}${tab}`;
       const html = await get(url);
@@ -76,7 +86,7 @@ async function main() {
       pages++;
       const hits = [
         ...LITERAL_MARKERS.filter(([, re]) => re.test(visible)).map(([label]) => label),
-        ...secretMarkers.filter((m) => flat.includes(m)).map((m) => `rep-only text "${m.slice(0, 30)}..."`),
+        ...[...secretMarkers, ...accountMarkers].filter((m) => flat.includes(m)).map((m) => `rep-only text "${m.slice(0, 30)}..."`),
       ];
       if (hits.length > 0) {
         failures++;

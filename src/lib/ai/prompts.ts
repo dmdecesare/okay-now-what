@@ -6,7 +6,8 @@ import { todayISO, daysBetween } from "@/lib/dates";
 import { STAGE_LABELS } from "@/lib/constants";
 import { formatDate } from "@/lib/format";
 import { DOC_CATALOG } from "@/lib/resources";
-import type { MaterialKind } from "@/lib/schemas";
+import type { MaterialKind, NewAccountInput } from "@/lib/schemas";
+import { GUIDE_TOPICS } from "@/lib/guide-topics";
 
 // ============================================================================
 // Every prompt Claude runs in this app, in one place (SPEC section 7).
@@ -226,8 +227,68 @@ Plan milestones:
 ${milestoneLines(d)}`;
 }
 
+// ----------------------------------------------------------------------------
+// Build account from deal notes (rep, Add account). Two calls run in parallel.
+// ----------------------------------------------------------------------------
+
+const GUIDE_TOPIC_LIST = GUIDE_TOPICS.map((t) => `- ${t.id}: ${t.title} (${t.level === "role" ? "role track" : t.level})`).join("\n");
+
+const DOC_KEY_LIST = Object.entries(DOC_CATALOG)
+  .map(([key, d]) => `- ${key}: ${d.title}`)
+  .join("\n");
+
+const BUILD_SHARED = `You turn a GitHub account executive's raw deal notes into the onboarding plan and materials for a new GitHub Copilot customer. The rep has no customer success team, so this is what the customer will actually use.
+
+Rules:
+- Use only people, numbers, and facts that are in the notes. If a name isn't given, use null for the name and describe the role. Never invent metrics.
+- Write for this specific customer: their industry, teams, concerns, and goals.
+- Who sees what: some fields are shown to the customer in their own onboarding app, so write those as the customer's material in your own words. Never copy sentences from the rep's notes into them, and leave out internal sales context: renewal or contract timing, budget and deal politics, competitors, who is skeptical, and the rep's opinions of people.
+- Tailor the plan to the stage. Pilot: measurable success criteria, a baseline early, and a readout to the decision maker near the end. Onboarding: admin setup first, then enablement in waves. Rolling out: adoption by team, fixing weak spots, and showing value ahead of renewal.
+- ${STYLE}
+
+${VERIFIED_FACTS}`;
+
+export const BUILD_PLAN_SYSTEM = `${BUILD_SHARED}
+
+Produce the plan and the people. Customer-visible: summary is NOT shown, but goals[].goal, successCriteria, milestones, thisWeek, and guides are. Rep-only: goals[].inTheirWords, champion notes, stakeholders, and concerns.
+- summary: two sentences a rep could read before a call.
+- goals: 3 to 4. "goal" is a short outcome. "inTheirWords" is a close paraphrase or quote from the notes.
+- champion and stakeholders: from the notes, with a one-line note on what each cares about and how to work with them.
+- concerns: every worry raised in the notes, who raised it, and how the plan answers it.
+- successCriteria: for pilots, 3 to 4 measurable criteria with targets taken from the notes (current is null and status "not_started" unless the notes say otherwise). For other stages, an empty list.
+- milestones: 6 to 10 in date order, with dueDay counted from day 1 of the stage. Set alreadyDone to true only for milestones the notes say already happened. For pilots, the last milestone is the readout before the pilot ends.
+- thisWeek: the 3 most important things for the customer to do this week.
+- guides: 5 to 8 picks from this list (use the id), each with a one-line reason tied to this customer:
+${GUIDE_TOPIC_LIST}`;
+
+export const BUILD_KIT_SYSTEM = `${BUILD_SHARED}
+
+Produce the setup guide and the champion kit. All of it is customer-visible, so follow the "who sees what" rule closely:
+- setupSteps: 4 to 6 admin and security steps built around the concerns in the notes (for example content exclusion, the public code filter, policies, seats, AI credit budgets, usage metrics, audit logs, custom instructions). Each has a short id (lowercase-with-dashes), a title, why it matters for this customer, 2 to 4 concrete steps, the audience, and 1 to 2 docs chosen from this list (use the key):
+${DOC_KEY_LIST}
+- championKit.launchAnnouncement: an email from the champion to developers, starting with "Subject:", with why, three things to do this week, guardrails that matter here, and where to get help. Plain text.
+- championKit.enablementAgenda: a 45 to 60 minute hands-on session with timings, tailored to their teams and concerns. Plain text.
+- championKit.developerFaq: 5 to 7 questions. It must include "Will this replace me?" and "Is our code used for training?". Answer the training question by quoting GitHub's docs exactly: "GitHub does not use Copilot Business or Copilot Enterprise customer data to train AI models."`;
+
+export function buildAccountInput(input: NewAccountInput): string {
+  const day = input.stageDay ?? 1;
+  return `New account:
+- Company: ${input.name}
+- Industry: ${input.industry}${input.employees ? `\n- Employees: ${input.employees}` : ""}
+- Copilot seats: ${input.seats}
+- Stage: ${STAGE_LABELS[input.stage]}${input.stage === "pilot" ? `, ${input.pilotLengthDays ?? 60}-day pilot` : ""}
+- Today is day ${day} of this stage${input.renewalMonths ? `\n- Renewal in about ${input.renewalMonths} months` : ""}
+
+Rep's deal notes:
+"""
+${input.notes}
+"""`;
+}
+
 /** The catalog of prompts, for the Behind the build page. */
 export const PROMPT_CATALOG = [
+  { feature: "Build account: plan and people", system: BUILD_PLAN_SYSTEM },
+  { feature: "Build account: setup guide and champion kit", system: BUILD_KIT_SYSTEM },
   { feature: "Ask assistant", system: ASK_SYSTEM },
   { feature: "Question topic", system: CLASSIFY_SYSTEM },
   { feature: "Next best action", system: NEXT_BEST_ACTION_SYSTEM },

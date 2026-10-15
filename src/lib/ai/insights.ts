@@ -7,7 +7,7 @@ import { insightSchemas, type InsightKind, type MaterialKind } from "@/lib/schem
 import { recordCall } from "@/lib/rate-limit";
 import { generateStructured, generateText, systemBlocks } from "./client";
 import type { AiFeature } from "./config";
-import { noEmDash } from "./format";
+import { cleanStrings, noEmDash } from "./format";
 import {
   NEXT_BEST_ACTION_SYSTEM,
   QUESTION_THEMES_SYSTEM,
@@ -27,16 +27,6 @@ const INSIGHT_SETUP: Record<InsightKind, { feature: AiFeature; system: string; i
   risk_play: { feature: "riskPlay", system: RISK_PLAY_SYSTEM, input: riskPlayInput },
   question_themes: { feature: "questionThemes", system: QUESTION_THEMES_SYSTEM, input: questionThemesInput },
 };
-
-/** Recursively removes em dashes from every string in generated JSON. */
-function cleanStrings<T>(value: T): T {
-  if (typeof value === "string") return noEmDash(value) as T;
-  if (Array.isArray(value)) return value.map(cleanStrings) as T;
-  if (value && typeof value === "object") {
-    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, cleanStrings(v)])) as T;
-  }
-  return value;
-}
 
 export async function regenerateInsight(slug: string, kind: InsightKind, ipHash: string): Promise<void> {
   const detail = await getAccountDetail(slug);

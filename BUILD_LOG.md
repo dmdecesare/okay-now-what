@@ -72,3 +72,15 @@ A few lines per session. This feeds pages 5 and 6 of the PDF.
 **Anything that surprised me about Claude:** It tested the failure path on purpose with a fake key, so I know the app degrades gracefully instead of hoping it does.
 **Numbers:** All live testing cost about $0.13 on Claude Sonnet 5.5.
 **Screenshot to capture for the PDF:** Ask tab answer with Sources; rep Questions tab showing the live theme summary; Harborline pilot readout draft.
+
+## Session 6: Phase 6, add account from deal notes (2026-10-15)
+
+**Date and time spent:**
+**What I asked Claude Code to do:** Build the add-account flow: paste deal notes, Claude builds the plan, setup guide, champion kit, and the customer's app.
+**What worked on the first try:** The Northwind Freight example (messy shorthand notes) became a full account in under 30 seconds: goals quoted from the notes, people only from the notes ("Raj, name unconfirmed"), measurable pilot criteria, 9 dated milestones ending in a readout, and a setup guide linked to verified docs. An onboarding-stage test produced enablement waves instead of pilot criteria.
+**What broke and how we fixed it:**
+- To stay under a minute, Claude split generation into two calls that run at the same time. Builds took 19 to 28 seconds.
+- The leak checker caught Claude copying a sentence from my deal notes into customer-facing materials, plus a mention of renewal timing. Claude added a "who sees what" rule to the prompts, rebuilt, and the check passed.
+**Anything that surprised me about Claude:** The leak checker it wrote in Phase 3 caught a real problem in Phase 6. Testing paid off.
+**Numbers:** About $0.065 per account built (Claude Sonnet 5.5).
+**Screenshot to capture for the PDF:** The build progress checklist mid-build; the new account Overview with "Done. Here's their plan."
