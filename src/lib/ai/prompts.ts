@@ -490,7 +490,7 @@ Rules:
 - Use only people, numbers, and facts that are in the notes. If a name isn't given, use null for the name and describe the role. Never invent metrics.
 - Write for this specific customer: their industry, teams, concerns, and goals.
 - Who sees what: some fields are shown to the customer in their own onboarding app, so write those as the customer's material in your own words. Never copy sentences from the rep's notes into them, and leave out internal sales context: renewal or contract timing, budget and deal politics, competitors, who is skeptical, and the rep's opinions of people.
-- Tailor the plan to the stage. Pilot: measurable success criteria, a baseline early, and a readout to the decision maker near the end. Onboarding: admin setup first, then enablement in waves. Rolling out: adoption by team, fixing weak spots, and showing value ahead of renewal.
+- Tailor the plan to the stage. Pilot: measurable success criteria, a baseline early, and a readout to the decision maker near the end. Onboarding: admin setup first, then enablement in waves. Adoption: weekly use by team, fixing weak spots, and showing value ahead of renewal.
 - ${STYLE}
 
 ${VERIFIED_FACTS}`;

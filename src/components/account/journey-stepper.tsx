@@ -1,30 +1,29 @@
 import { Check } from "lucide-react";
 import type { Stage } from "@/lib/schemas";
+import { STAGE_LABELS } from "@/lib/constants";
 import { cn } from "@/lib/cn";
 
-const STEPS: { key: Stage | "renewal"; label: string }[] = [
+// Stage keys stay as stored ("rolling_out"); the label the rep sees is "Adoption".
+const STEPS: { key: Stage; label: string }[] = [
   { key: "pilot", label: "Pilot" },
   { key: "onboarding", label: "Onboarding" },
-  { key: "rolling_out", label: "Rolling out" },
-  { key: "renewal", label: "Renewal" },
+  { key: "rolling_out", label: STAGE_LABELS.rolling_out },
 ];
 
-/** Where the account sits in the customer journey, from pilot to renewal. */
+/** Where the account sits in the post-sale journey: pilot, onboarding, then adoption. */
 export function JourneyStepper({
   stage,
   stageDay,
   pilotLengthDays,
-  renewalInDays,
 }: {
   stage: Stage;
   stageDay: number;
   pilotLengthDays: number | null;
-  renewalInDays: number | null;
 }) {
   const current = STEPS.findIndex((s) => s.key === stage);
 
   return (
-    <ol className="grid grid-cols-4 gap-2" aria-label="Customer journey">
+    <ol className="grid grid-cols-3 gap-2" aria-label="Account stage">
       {STEPS.map((s, i) => {
         const done = i < current;
         const active = i === current;
@@ -32,15 +31,11 @@ export function JourneyStepper({
           ? pilotLengthDays
             ? `Day ${stageDay} of ${pilotLengthDays}`
             : `Day ${stageDay}`
-          : s.key === "renewal" && renewalInDays != null
-            ? `In ${renewalInDays} days`
-            : s.key === "renewal" && pilotLengthDays
-              ? "After the pilot"
-              : done
-                ? s.key === "pilot"
-                  ? "Before purchase"
-                  : "Done"
-                : "Up next";
+          : done
+            ? s.key === "pilot"
+              ? "Before purchase"
+              : "Done"
+            : "Up next";
         const fill = active && pilotLengthDays ? Math.min(100, (stageDay / pilotLengthDays) * 100) : active ? 50 : done ? 100 : 0;
         return (
           <li key={s.key} aria-current={active ? "step" : undefined} className="min-w-0">

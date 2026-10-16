@@ -235,7 +235,7 @@ export default function DesignPage() {
           <div className="space-y-4">
             <KeyFacts
               items={[
-                { label: "Stage", value: "Rolling out", sub: "Day 75" },
+                { label: "Stage", value: "Adoption", sub: "Day 75" },
                 { label: "Seats", value: "700" },
                 { label: "Active", value: "71%", sub: "-12 pts" },
                 { label: "Renewal", value: "In 270 days" },

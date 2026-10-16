@@ -86,12 +86,11 @@ async function AccountHeader({ params }: { params: LayoutProps<"/accounts/[slug]
             </p>
           </div>
 
-          <div className="mt-5 max-w-3xl">
+          <div className="mt-5 max-w-2xl">
             <JourneyStepper
               stage={a.stage}
               stageDay={d.stageDay}
               pilotLengthDays={a.pilotLengthDays}
-              renewalInDays={s.renewalInDays}
             />
           </div>
         </div>

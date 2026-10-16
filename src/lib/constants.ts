@@ -7,7 +7,7 @@ export const PRICING_NOTE = "Demo assumption: Copilot Enterprise at $39 per seat
 export const STAGE_LABELS: Record<Stage, string> = {
   pilot: "Pilot",
   onboarding: "Onboarding",
-  rolling_out: "Rolling out",
+  rolling_out: "Adoption",
 };
 
 export const NEW_ACCOUNT_USAGE_NOTE =
