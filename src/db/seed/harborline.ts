@@ -356,6 +356,40 @@ Priya`,
     { name: "Ken W.", role: "developer", challenges: ["install", "first_chat"], daysAgo: 7 },
     { name: "Dee F.", role: "developer", challenges: ["install"], daysAgo: 3 },
   ],
+  calls: [
+    {
+      daysAgo: 6,
+      notes:
+        "mid-pilot check-in w/ Priya + 2 EMs. survey back 4.2. checkout loving test gen. mobile still meh, wants agent mode session. AppSec reviewing retention doc, Priya chasing. CTO wants PR cycle time on all 4 teams in readout.",
+      summary:
+        "Mid-pilot check-in with Priya and two engineering managers. Satisfaction came back at 4.2 and Checkout is the strongest team, while Mobile wants a hands-on agent mode session. AppSec is still reviewing data retention, and the CTO wants PR cycle time for all four teams in the readout.",
+    },
+  ],
+  helpRequests: [
+    { kind: "session", message: "Our mobile team would like a hands-on session on agent mode with our own Kotlin code.", name: "Priya", daysAgo: 8, status: "resolved" },
+  ],
+  pulse: [
+    [5, 0],
+    [4, 1],
+    [4, 3],
+    [5, 4],
+    [4, 6],
+    [4, 8],
+    [3, 9],
+    [5, 11],
+    [4, 12],
+    [4, 14],
+    [5, 16],
+    [4, 17],
+    [4, 19],
+    [4, 20],
+    [5, 22],
+    [3, 24],
+    [4, 25],
+    [5, 27],
+    [4, 3, "Suggestions in our Kotlin UI code are hit or miss."],
+    [4, 9, "Not sure what we can paste into Chat in the PCI repos."],
+  ],
   insights: {
     call_brief: {
       headline:

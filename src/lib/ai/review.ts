@@ -25,7 +25,7 @@ export async function generateBusinessReview(slug: string, ipHash: string): Prom
       "businessReview",
       businessReviewSchema,
       systemBlocks(BUSINESS_REVIEW_SYSTEM),
-      businessReviewInput(view, learning),
+      businessReviewInput(view, learning, detail.pulse),
     );
     const content = businessReviewSchema.parse(cleanStrings(data));
     const db = await getDb();

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
 import type { AccountSummary } from "@/db/queries";
 import { Sparkline } from "@/components/ui/sparkline";
 import { cn } from "@/lib/cn";
@@ -46,14 +45,20 @@ export function weekSummary(accounts: AccountSummary[]): React.ReactNode[] {
         {pilotIsReady && ready.length === 1 ? `, with its pilot readout ${pilot.left} days out` : ""}
       </span>,
     );
-    if (pilotIsReady && ready.length === 1) {
-      return parts.flatMap((p, i) => (i === 0 ? [p] : [", and ", p])).concat(".");
-    }
   }
-  if (pilot) {
+  if (pilot && !(ready.length === 1 && ready[0].id === pilot.a.id)) {
     parts.push(
       <span key="pilot">
         {link(pilot.a)}&apos;s pilot readout is {pilot.left} days out
+      </span>,
+    );
+  }
+  const asking = accounts.filter((a) => a.openRequests > 0);
+  if (asking.length) {
+    parts.push(
+      <span key="help">
+        {asking.map((a, i) => [i > 0 && (i === asking.length - 1 ? " and " : ", "), link(a)])}{" "}
+        {asking.length === 1 ? "is waiting on a help request" : "are waiting on help requests"}
       </span>,
     );
   }
@@ -124,17 +129,5 @@ export function HomeHero({
         ))}
       </dl>
     </section>
-  );
-}
-
-export function HeroLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-white/15 bg-white/10 px-3.5 text-sm font-medium text-white backdrop-blur transition-colors hover:bg-white/15"
-    >
-      {children}
-      <ArrowUpRight className="size-4 opacity-70" />
-    </Link>
   );
 }

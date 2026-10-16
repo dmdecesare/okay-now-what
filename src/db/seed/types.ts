@@ -42,6 +42,12 @@ export type SeedAccount = {
   insights: Partial<InsightContent>;
   /** Fictional learners on the customer's learning paths. */
   learning?: { name: string; role: LearningRole; challenges: ChallengeId[]; daysAgo: number }[];
+  /** Calls the rep logged (rep-only). */
+  calls?: { daysAgo: number; notes: string; summary: string }[];
+  /** Help the customer asked for in the portal. */
+  helpRequests?: { kind: "session" | "blocker" | "other"; message: string; name?: string; daysAgo: number; status: "open" | "resolved" }[];
+  /** Anonymous pulse answers: [score, daysAgo, blocker?]. */
+  pulse?: [score: number, daysAgo: number, blocker?: string][];
   /** A business review, written from customer-visible data only (it's shown on the portal). */
   review?: { content: BusinessReview; status: "draft" | "published" };
 };

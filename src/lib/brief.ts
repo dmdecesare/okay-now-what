@@ -2,6 +2,7 @@ import type { AccountDetail } from "@/db/queries";
 import { pct, sortSnapshots, teamTrends } from "./adoption";
 import { daysBetween, todayISO } from "./dates";
 import { displayStatus } from "./milestones";
+import { formatDate } from "./format";
 import { summarizeSpend } from "./spend";
 
 // What changed on an account recently, computed from the data (no AI). The call brief page
@@ -65,6 +66,24 @@ export function recentChanges(d: AccountDetail, now: Date = new Date()): ChangeF
     facts.push({
       tone: "neutral",
       text: `${recentQs.length} new ${recentQs.length === 1 ? "question" : "questions"} in the portal (${topics}).`,
+    });
+  }
+
+  // Calls you logged, help the customer asked for, and the pulse.
+  for (const c of d.calls) {
+    if (within(c.occurredOn)) facts.push({ tone: "neutral", text: `You logged a call on ${formatDate(c.occurredOn)}: ${c.summary}` });
+  }
+  const openRequests = d.helpRequests.filter((r) => r.status === "open");
+  if (openRequests.length) {
+    facts.push({
+      tone: "bad",
+      text: `${openRequests.length} open help ${openRequests.length === 1 ? "request" : "requests"} from the portal.`,
+    });
+  }
+  if (d.pulse.average != null) {
+    facts.push({
+      tone: d.pulse.average >= 4 ? "good" : d.pulse.average < 3 ? "bad" : "neutral",
+      text: `Developer pulse is ${d.pulse.average} out of 5 from ${d.pulse.count} answers.`,
     });
   }
 

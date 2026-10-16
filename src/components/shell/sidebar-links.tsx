@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, LayoutGrid, Palette, PlusCircle } from "lucide-react";
+import { BookOpen, GraduationCap, LayoutGrid, PlayCircle, PlusCircle } from "lucide-react";
 import { AccountLogo } from "@/components/logos/account-logo";
 import { HealthDot } from "@/components/ui/badges";
 import type { HealthStatus } from "@/lib/health";
@@ -11,8 +11,12 @@ import { cn } from "@/lib/cn";
 const NAV = [
   { href: "/", label: "Book of business", icon: LayoutGrid, match: (p: string) => p === "/" },
   { href: "/accounts/new", label: "Add account", icon: PlusCircle, match: (p: string) => p === "/accounts/new" },
-  { href: "/behind-the-build", label: "Behind the build", icon: BookOpen, match: (p: string) => p.startsWith("/behind-the-build") },
-  { href: "/design", label: "Design system", icon: Palette, match: (p: string) => p.startsWith("/design") },
+];
+
+const CONTENT = [
+  { href: "/library/guides", label: "Guides", icon: BookOpen, match: (p: string) => p.startsWith("/library/guides") },
+  { href: "/library/videos", label: "Videos", icon: PlayCircle, match: (p: string) => p.startsWith("/library/videos") },
+  { href: "/library/learning", label: "Learning paths", icon: GraduationCap, match: (p: string) => p.startsWith("/library/learning") },
 ];
 
 const itemClass = (active: boolean) =>
@@ -21,11 +25,11 @@ const itemClass = (active: boolean) =>
     active ? "bg-sidebar-active text-sidebar-ink" : "text-sidebar-muted hover:bg-sidebar-active hover:text-sidebar-ink",
   );
 
-export function SidebarNav() {
+export function SidebarNav({ section = "main" }: { section?: "main" | "content" }) {
   const pathname = usePathname();
   return (
     <ul className="space-y-0.5">
-      {NAV.map(({ href, label, icon: Icon, match }) => {
+      {(section === "content" ? CONTENT : NAV).map(({ href, label, icon: Icon, match }) => {
         const active = match(pathname);
         return (
           <li key={href}>

@@ -180,6 +180,56 @@ export const learningCompletions = pgTable(
   ],
 );
 
+/** Calls the rep logged: their notes and Claude's summary. Rep-only. */
+export const callLogs = pgTable(
+  "call_logs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    accountId: uuid("account_id")
+      .notNull()
+      .references(() => accounts.id, { onDelete: "cascade" }),
+    occurredOn: date("occurred_on", { mode: "string" }).notNull(),
+    notes: text("notes").notNull(),
+    summary: text("summary").notNull(),
+    source: text("source").$type<"seed" | "live">().notNull().default("live"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("call_logs_account_idx").on(t.accountId)],
+);
+
+/** Help the customer asked for from their success portal: a session, a blocker, or anything else. */
+export const helpRequests = pgTable(
+  "help_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    accountId: uuid("account_id")
+      .notNull()
+      .references(() => accounts.id, { onDelete: "cascade" }),
+    kind: text("kind").$type<"session" | "blocker" | "other">().notNull(),
+    message: text("message").notNull(),
+    requesterName: text("requester_name"),
+    status: text("status").$type<"open" | "resolved">().notNull().default("open"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+  },
+  (t) => [index("help_requests_account_idx").on(t.accountId)],
+);
+
+/** Anonymous weekly pulse from developers in the portal: a 1 to 5 score and an optional blocker. */
+export const pulseResponses = pgTable(
+  "pulse_responses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    accountId: uuid("account_id")
+      .notNull()
+      .references(() => accounts.id, { onDelete: "cascade" }),
+    score: integer("score").notNull(),
+    blocker: text("blocker"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("pulse_account_idx").on(t.accountId, t.createdAt)],
+);
+
 /** One row per live AI call. Powers rate limiting and the "by the numbers" stats. */
 export const aiCalls = pgTable(
   "ai_calls",
@@ -201,3 +251,6 @@ export type Milestone = typeof milestones.$inferSelect;
 export type UsageSnapshot = typeof usageSnapshots.$inferSelect;
 export type SpendMonth = typeof spendMonths.$inferSelect;
 export type CustomerQuestion = typeof customerQuestions.$inferSelect;
+export type CallLog = typeof callLogs.$inferSelect;
+export type HelpRequest = typeof helpRequests.$inferSelect;
+export type PulseResponse = typeof pulseResponses.$inferSelect;

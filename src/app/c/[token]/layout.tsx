@@ -7,6 +7,7 @@ import { CustomerTabNav } from "@/components/customer/tab-nav";
 import { VisitTracker } from "@/components/customer/visit-tracker";
 import { AskProvider } from "@/components/customer/ask-provider";
 import { AskLauncher } from "@/components/customer/ask-launcher";
+import { RequestHelp } from "@/components/customer/request-help";
 import { LiveRefresh } from "@/components/live-refresh";
 import { AccountLogo } from "@/components/logos/account-logo";
 import { getCustomerReview, getCustomerView } from "@/db/queries";
@@ -75,25 +76,28 @@ async function CustomerHeader({ params }: { params: LayoutProps<"/c/[token]">["p
                 <p className="truncate text-xs text-ink-muted">Customer success portal</p>
               </div>
             </div>
-            {champion && (
-              <div className="hidden items-center gap-2.5 sm:flex">
-                <div className="text-right leading-tight">
-                  <p className="text-sm font-medium">{champion}</p>
-                  <p className="text-xs text-ink-muted">{customer.profile.champion.title}</p>
+            <div className="flex items-center gap-4">
+              {customer && <RequestHelp token={token} />}
+              {champion && (
+                <div className="hidden items-center gap-2.5 sm:flex">
+                  <div className="text-right leading-tight">
+                    <p className="text-sm font-medium">{champion}</p>
+                    <p className="text-xs text-ink-muted">{customer.profile.champion.title}</p>
+                  </div>
+                  <span
+                    className="flex size-9 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent-ink ring-1 ring-accent/15"
+                    aria-hidden
+                  >
+                    {champion
+                      .split(/\s+/)
+                      .map((w) => w[0])
+                      .join("")
+                      .slice(0, 2)
+                      .toUpperCase()}
+                  </span>
                 </div>
-                <span
-                  className="flex size-9 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent-ink ring-1 ring-accent/15"
-                  aria-hidden
-                >
-                  {champion
-                    .split(/\s+/)
-                    .map((w) => w[0])
-                    .join("")
-                    .slice(0, 2)
-                    .toUpperCase()}
-                </span>
-              </div>
-            )}
+              )}
+            </div>
           </div>
           {customer && <CustomerTabNav token={token} hasReview={!!review} />}
         </div>

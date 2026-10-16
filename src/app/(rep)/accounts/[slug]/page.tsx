@@ -4,6 +4,8 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { TabSkeleton } from "@/components/account/tab-skeleton";
 import { SuccessCriteriaList } from "@/components/account/success-criteria";
 import { NewAccountBanner } from "@/components/account/new-account-banner";
+import { HelpRequests } from "@/components/account/help-requests";
+import { CallHistory } from "@/components/account/call-history";
 import { daysBetween } from "@/lib/dates";
 import { loadAccount } from "./load";
 
@@ -19,7 +21,7 @@ async function Overview({
   params,
   searchParams,
 }: Pick<PageProps<"/accounts/[slug]">, "params" | "searchParams">) {
-  const { account, profile } = await loadAccount(params);
+  const { account, profile, helpRequests, calls } = await loadAccount(params);
   const justBuilt = (await searchParams).new === "1";
   const lastVisit = account.championLastVisitAt
     ? daysBetween(account.championLastVisitAt, new Date())
@@ -99,6 +101,8 @@ async function Overview({
         </div>
 
         <div className="space-y-6">
+          <HelpRequests slug={account.slug} requests={helpRequests} />
+          <CallHistory calls={calls} limit={3} compact />
           <Card className="p-0">
             <CardHeader icon={<UserRound className="size-4" />} title="Champion" />
             <CardBody>

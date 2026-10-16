@@ -13,7 +13,7 @@ import { BRIEF_WINDOW_DAYS, recentChanges } from "@/lib/brief";
 // ============================================================================
 // Every prompt Claude runs in this app, in one place (SPEC section 7).
 // Each feature has a SYSTEM prompt (stable, cached) and an input builder that
-// turns account data into the user message. Shown on the Behind the build page.
+// turns account data into the user message.
 // ============================================================================
 
 const STYLE = `Write in plain, friendly English with short sentences. Be specific to this account. Never use em dashes. Don't invent numbers, people, or features that aren't in the data you're given.`;
@@ -259,7 +259,9 @@ Recent changes (last ${BRIEF_WINDOW_DAYS} days):
 ${facts || "  - nothing notable"}
 
 Latest customer questions:
-${qs || "  - none"}`;
+${qs || "  - none"}
+
+${supportLines(d, new Date())}`;
 }
 
 // ----------------------------------------------------------------------------
@@ -283,6 +285,39 @@ ${d.expansion.signals.map((s) => `  - ${s.label}: ${s.detail}`).join("\n") || " 
 }
 
 // ----------------------------------------------------------------------------
+// Log a call (rep): notes in, proposed account updates and a follow-up email out
+// ----------------------------------------------------------------------------
+
+export const CALL_LOG_SYSTEM = `You keep a GitHub Copilot account up to date for an account executive who has no customer success team. They just had a call with the customer and pasted their notes. Propose the changes to the account record, and write the follow-up email.
+- Only propose changes the notes support. If the notes don't mention something, leave it out. Never invent people, dates, or numbers.
+- completedMilestoneIds, startedMilestoneIds, and rescheduledMilestones: use only ids from the milestone list.
+- If the notes give a new date for an existing milestone (for example an overdue session that is now booked), put it in rescheduledMilestones with dueInDays counted from today. Never create a new milestone that duplicates an existing one.
+- newMilestones: real next steps agreed on the call, with dueInDays counted from today. These are shown to the customer in their portal, so write them as the customer's plan in your own words. Never copy the rep's notes into them, and leave out internal sales context (pricing, renewal or contract timing, deal politics, opinions of people).
+- newConcerns and newStakeholders: only new ones not already on the account. These are rep-only.
+- championNote: an updated one-line note on the champion if the call changed what we know, otherwise null.
+- summary: two or three sentences for the account's call log.
+- followUpEmail: from the rep to the people on the call. Start with "Subject:". Thank them, recap decisions, list next steps with owners and dates, and keep it under 180 words. No pricing. Plain text, "- " for lists.
+- ${STYLE}`;
+
+export function callLogInput(d: AccountDetail, notes: string, occurredOn: string): string {
+  const today = todayISO();
+  const ms = d.milestones
+    .map((m) => `  - id ${m.id}: ${m.title} (${displayStatus(m, today).replace("_", " ")}, due ${formatDate(m.dueDate)})`)
+    .join("\n");
+  return `Today is ${formatDate(today)}. The call was on ${formatDate(occurredOn)}.
+
+${accountBasics(d)}
+
+Milestones:
+${ms || "  - none"}
+
+Rep's call notes:
+"""
+${notes}
+"""`;
+}
+
+// ----------------------------------------------------------------------------
 // Business review (customer-facing, generated from the rep's Tools tab)
 // Built only from the customer-safe view, so nothing internal can reach it.
 // ----------------------------------------------------------------------------
@@ -301,6 +336,7 @@ export const BUSINESS_REVIEW_SYSTEM = `You write a business review that a GitHub
 export function businessReviewInput(
   c: CustomerView,
   learning: { learners: number; completions: number },
+  pulse: { average: number | null; count: number } = { average: null, count: 0 },
 ): string {
   const usage = sortSnapshots(c.usage);
   const latest = usage.at(-1);
@@ -326,6 +362,7 @@ By team:
 ${teams}
 
 Learning paths: ${learning.learners} developers have started, with ${learning.completions} challenges completed.
+Developer pulse (anonymous, "how useful has Copilot been this week?"): ${pulse.average != null ? `${pulse.average} out of 5 from ${pulse.count} answers in the last 30 days` : "no answers yet"}.
 
 Plan milestones:
 ${milestones}`;
@@ -374,7 +411,26 @@ function compactAccountLine(d: AccountDetail, now: Date): string {
     d.health.signals.length ? ` (${d.health.signals.map((s) => s.label).join("; ")})` : ""
   }. Growth: ${d.expansion.level}${d.expansion.signals.length ? ` (${d.expansion.signals.map((s) => s.label).join("; ")})` : ""}. Plan: ${done} of ${
     d.milestones.length
-  } done, ${overdue} overdue. Champion ${d.profile.champion.name ?? "not named"} last opened the portal ${visit}. Questions in the last 7 days: ${recentQs.length}.`;
+  } done, ${overdue} overdue. Champion ${d.profile.champion.name ?? "not named"} last opened the portal ${visit}. Questions in the last 7 days: ${recentQs.length}. Open help requests: ${d.helpRequests.filter((r) => r.status === "open").length}. Developer pulse: ${d.pulse.average != null ? `${d.pulse.average}/5 from ${d.pulse.count} answers` : "no answers yet"}. Last logged call: ${d.calls[0] ? formatDate(d.calls[0].occurredOn) : "none"}.`;
+}
+
+/** Help requests, pulse blockers, and logged calls. Customer-written text is fenced off as data. */
+function supportLines(d: AccountDetail, now: Date): string {
+  const open = d.helpRequests.filter((r) => r.status === "open");
+  const requests = open
+    .map((r) => `  - (${r.kind}, ${daysBetween(r.createdAt, now)} days ago) customer wrote: """${r.message.slice(0, 300)}"""`)
+    .join("\n");
+  const blockers = d.pulse.blockers.map((b) => `  - customer wrote: """${b.text.slice(0, 200)}"""`).join("\n");
+  const calls = d.calls
+    .slice(0, 3)
+    .map((c) => `  - ${formatDate(c.occurredOn)}: ${c.summary}`)
+    .join("\n");
+  return `Open help requests from the portal:
+${requests || "  - none"}
+Developer pulse: ${d.pulse.average != null ? `${d.pulse.average} out of 5 from ${d.pulse.count} answers in 30 days` : "no answers yet"}. Blockers mentioned:
+${blockers || "  - none"}
+Recent logged calls:
+${calls || "  - none"}`;
 }
 
 function focusSection(d: AccountDetail, now: Date): string {
@@ -400,6 +456,8 @@ ${milestoneLines(d)}
 Recent customer questions (newest first):
 ${qs || "  - none"}
 ${insights ? `\n${insights}` : ""}
+
+${supportLines(d, now)}
 
 Rep's deal notes: ${d.account.dealNotes}`;
 }
@@ -474,18 +532,3 @@ ${input.notes}
 """`;
 }
 
-/** The catalog of prompts, for the Behind the build page. */
-export const PROMPT_CATALOG = [
-  { feature: "Build account: plan and people", system: BUILD_PLAN_SYSTEM },
-  { feature: "Build account: setup guide and champion kit", system: BUILD_KIT_SYSTEM },
-  { feature: "Ask assistant", system: ASK_SYSTEM },
-  { feature: "Question topic", system: CLASSIFY_SYSTEM },
-  { feature: "Next best action", system: NEXT_BEST_ACTION_SYSTEM },
-  { feature: "Risk explanation and recovery play", system: RISK_PLAY_SYSTEM },
-  { feature: "Question themes", system: QUESTION_THEMES_SYSTEM },
-  { feature: "Tools", system: TOOLS_SYSTEM },
-  { feature: "Rep assistant", system: REP_CHAT_SYSTEM },
-  { feature: "Call brief", system: CALL_BRIEF_SYSTEM },
-  { feature: "Expansion play", system: EXPANSION_PITCH_SYSTEM },
-  { feature: "Business review", system: BUSINESS_REVIEW_SYSTEM },
-];

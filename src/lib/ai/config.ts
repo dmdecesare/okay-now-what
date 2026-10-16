@@ -33,6 +33,8 @@ export const AI_FEATURES = {
   callBrief: { model: MODELS.sonnet, effort: "low", maxTokens: 6000, label: "Call brief" },
   /** The expansion pitch when growth signals fire. */
   expansionPitch: { model: MODELS.sonnet, effort: "low", maxTokens: 4000, label: "Expansion play" },
+  /** Reads the rep's call notes and proposes account updates plus a follow-up email. */
+  callLog: { model: MODELS.sonnet, effort: "medium", maxTokens: 8000, label: "Log a call" },
   /** The customer-facing business review. */
   businessReview: { model: MODELS.sonnet, effort: "medium", maxTokens: 8000, label: "Business review" },
 } as const satisfies Record<string, FeatureConfig>;

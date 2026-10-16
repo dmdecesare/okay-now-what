@@ -9,7 +9,10 @@ import {
   accounts,
   aiInsights,
   businessReviews,
+  callLogs,
   customerQuestions,
+  helpRequests,
+  pulseResponses,
   learningCompletions,
   generatedMaterials,
   milestones,
@@ -40,6 +43,9 @@ export async function seedIfEmpty(db: DB): Promise<boolean> {
 /** Deletes everything and reloads the three demo accounts. */
 export async function resetAndSeed(db: DB): Promise<void> {
   // Children first, then accounts. (No transaction: Neon's HTTP driver does not support them.)
+  await db.delete(pulseResponses);
+  await db.delete(helpRequests);
+  await db.delete(callLogs);
   await db.delete(learningCompletions);
   await db.delete(businessReviews);
   await db.delete(aiInsights);
@@ -139,6 +145,37 @@ async function insertSeed(db: DB, now: Date = new Date()): Promise<void> {
             completedAt: new Date(now.getTime() - (l.daysAgo + l.challenges.length - ci) * DAY_MS - li * 41 * 60 * 1000),
           })),
         ),
+      );
+    }
+
+    if (s.calls?.length) {
+      await db.insert(callLogs).values(
+        s.calls.map((c) => ({ accountId, occurredOn: addDays(today, -c.daysAgo), notes: c.notes, summary: c.summary, source: "seed" as const })),
+      );
+    }
+
+    if (s.helpRequests?.length) {
+      await db.insert(helpRequests).values(
+        s.helpRequests.map((r) => ({
+          accountId,
+          kind: r.kind,
+          message: r.message,
+          requesterName: r.name ?? null,
+          status: r.status,
+          createdAt: new Date(now.getTime() - r.daysAgo * DAY_MS),
+          resolvedAt: r.status === "resolved" ? new Date(now.getTime() - Math.max(0, r.daysAgo - 1) * DAY_MS) : null,
+        })),
+      );
+    }
+
+    if (s.pulse?.length) {
+      await db.insert(pulseResponses).values(
+        s.pulse.map(([score, daysAgo, blocker], i) => ({
+          accountId,
+          score,
+          blocker: blocker ?? null,
+          createdAt: new Date(now.getTime() - daysAgo * DAY_MS - i * 13 * 60 * 1000),
+        })),
       );
     }
 

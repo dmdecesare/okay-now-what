@@ -341,6 +341,36 @@ Dan`,
     { name: "Ben A.", role: "developer", challenges: ["install", "first_chat"], daysAgo: 2 },
     { name: "Nora H.", role: "developer", challenges: ["install"], daysAgo: 1 },
   ],
+  calls: [
+    {
+      daysAgo: 9,
+      notes:
+        "kickoff w/ Dan, DevEx (3 ppl), CISO. agreed excl list for loan decisioning + credit model repos by wk2. DevEx runs enablement in waves, train the trainer first. CFO 6-mo value check, want weekly active by team.",
+      summary:
+        "Kickoff with Dan, the DevEx team, and the CISO. We agreed the exclusion list for the credit model repos lands in week two, and DevEx will run enablement in waves after a train-the-trainer session. The CFO's six-month value check makes weekly active use by team the number to watch.",
+    },
+  ],
+  helpRequests: [
+    { kind: "session", message: "Can we book the train-the-trainer session for our DevEx team? Thursday or Friday next week works best.", name: "Lena (DevEx)", daysAgo: 1, status: "open" },
+  ],
+  pulse: [
+    [5, 0],
+    [4, 2],
+    [4, 4],
+    [3, 6],
+    [4, 8],
+    [5, 10],
+    [4, 12],
+    [3, 14],
+    [4, 16],
+    [4, 18],
+    [5, 20],
+    [3, 22],
+    [4, 24],
+    [3, 26],
+    [3, 2, "Waiting on content exclusions before I use it in the lending repos."],
+    [4, 6, "JetBrains setup took a while to figure out."],
+  ],
   insights: {
     call_brief: {
       headline:

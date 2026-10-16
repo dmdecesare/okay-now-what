@@ -228,6 +228,26 @@ export const businessReviewSchema = z.object({
 });
 export type BusinessReview = z.infer<typeof businessReviewSchema>;
 
+// "Log a call": Claude reads the rep's notes and proposes changes to the account. The rep reviews
+// them before anything is saved.
+export const callUpdateSchema = z.object({
+  summary: z.string().describe("Two or three sentences: what happened on the call"),
+  completedMilestoneIds: z.array(z.string()).max(10),
+  startedMilestoneIds: z.array(z.string()).max(10),
+  rescheduledMilestones: z
+    .array(z.object({ id: z.string(), dueInDays: z.number().int().min(0).max(365) }))
+    .max(10)
+    .describe("Existing milestones the call gave a new date for"),
+  newMilestones: z
+    .array(z.object({ title: z.string(), description: z.string(), dueInDays: z.number().int().min(0).max(365) }))
+    .max(5),
+  newConcerns: z.array(z.object({ concern: z.string(), raisedBy: z.string(), response: z.string() })).max(4),
+  newStakeholders: z.array(z.object({ name: z.string().nullable(), title: z.string(), notes: z.string() })).max(4),
+  championNote: z.string().nullable().describe("An updated one-line note on the champion, or null if nothing changed"),
+  followUpEmail: z.string(),
+});
+export type CallUpdate = z.infer<typeof callUpdateSchema>;
+
 export const MATERIAL_KINDS = [
   "launch_email",
   "enablement_agenda",

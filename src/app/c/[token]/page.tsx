@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { ArrowRight, BookOpen, CalendarCheck, ClipboardCheck, Megaphone, PlayCircle, Target } from "lucide-react";
+import { ArrowRight, BookOpen, CalendarCheck, ClipboardCheck, LifeBuoy, Megaphone, PlayCircle, Target } from "lucide-react";
 import { CardBody, CardHeader } from "@/components/ui/card";
 import { TabSkeleton } from "@/components/account/tab-skeleton";
 import { Journey, journeyStep } from "@/components/customer/journey";
@@ -9,6 +9,10 @@ import { todayISO } from "@/lib/dates";
 import { formatDate } from "@/lib/format";
 import { brandColor } from "@/lib/logos";
 import { cn } from "@/lib/cn";
+import { getCustomerSupport } from "@/db/queries";
+import { PulseCard } from "@/components/customer/pulse-card";
+import { RequestHelp } from "@/components/customer/request-help";
+import { HELP_KIND_LABELS } from "@/lib/support";
 import { loadCustomer } from "./data";
 
 export default function CustomerHomePage({ params }: PageProps<"/c/[token]">) {
@@ -41,6 +45,7 @@ function Ring({ value }: { value: number }) {
 
 async function CustomerHome({ params }: { params: PageProps<"/c/[token]">["params"] }) {
   const c = await loadCustomer(params);
+  const support = (await getCustomerSupport(c.token)) ?? { requests: [], pulse: { count: 0, average: null } };
   const today = todayISO();
   const firstName = c.profile.champion.name?.split(" ")[0];
   const done = c.milestones.filter((m) => m.status === "done").length;
@@ -109,6 +114,44 @@ async function CustomerHome({ params }: { params: PageProps<"/c/[token]">["param
         </h2>
         <Journey current={step} />
       </section>
+
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+        <PulseCard token={c.token} average={support.pulse.average} count={support.pulse.count} />
+        <section className="rounded-xl border border-border bg-bg p-5 shadow-card">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent">
+                <LifeBuoy className="size-4" />
+              </span>
+              <div>
+                <h2 className="font-semibold">Need a hand?</h2>
+                <p className="text-sm text-ink-muted">Book a session or flag a blocker. Your account team sees it right away.</p>
+              </div>
+            </div>
+            <RequestHelp token={c.token} variant="card" />
+          </div>
+          {support.requests.length > 0 && (
+            <ul className="mt-4 divide-y divide-border rounded-lg border border-border">
+              {support.requests.map((r) => (
+                <li key={r.id} className="flex items-start justify-between gap-3 px-3 py-2.5 text-sm">
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-ink-faint">{HELP_KIND_LABELS[r.kind].label}</p>
+                    <p className="line-clamp-2">{r.message}</p>
+                  </div>
+                  <span
+                    className={cn(
+                      "shrink-0 rounded-full px-2 py-0.5 text-xs font-medium",
+                      r.status === "resolved" ? "bg-ok-soft text-ok" : "bg-surface-strong text-ink-muted",
+                    )}
+                  >
+                    {r.status === "resolved" ? "Done" : "With your account team"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <section className="overflow-hidden rounded-xl border border-border bg-bg shadow-card lg:col-span-2">

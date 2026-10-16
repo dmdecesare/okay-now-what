@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { getAccountDetail, summarize } from "@/db/queries";
-import { FileText } from "lucide-react";
+import { FileText, NotebookPen } from "lucide-react";
 import { AccountTabNav } from "@/components/account/tab-nav";
 import { ButtonLink } from "@/components/ui/button";
 import { ShareButton } from "@/components/account/share-button";
@@ -64,6 +64,10 @@ async function AccountHeader({ params }: { params: LayoutProps<"/accounts/[slug]
               <ButtonLink href={`/accounts/${a.slug}/brief`} size="sm">
                 <FileText />
                 Brief me
+              </ButtonLink>
+              <ButtonLink href={`/accounts/${a.slug}/log-call`} size="sm" variant="secondary">
+                <NotebookPen />
+                Log a call
               </ButtonLink>
               <ShareButton token={a.customerToken} />
             </div>

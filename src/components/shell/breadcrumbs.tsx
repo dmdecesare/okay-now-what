@@ -7,7 +7,9 @@ import { AccountLogo } from "@/components/logos/account-logo";
 
 const PAGES: Record<string, string> = {
   "/accounts/new": "Add account",
-  "/behind-the-build": "Behind the build",
+  "/library/guides": "Guides",
+  "/library/videos": "Videos",
+  "/library/learning": "Learning paths",
   "/design": "Design system",
 };
 
@@ -19,6 +21,7 @@ const TABS: Record<string, string> = {
   questions: "Questions",
   tools: "Tools",
   brief: "Call brief",
+  "log-call": "Log a call",
 };
 
 /** Where you are in the rep app. Account names come from the server; the path picks the trail. */

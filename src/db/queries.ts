@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { asc, count, desc, eq } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 import { assessHealth, activePct, type HealthStatus, type Signal } from "@/lib/health";
 import { assessExpansion, type ExpansionLevel, type ExpansionSignal } from "@/lib/expansion";
 import { baselineSnapshot, sortSnapshots } from "@/lib/adoption";
@@ -18,21 +18,26 @@ import {
 import { toChecklist, type ChecklistMilestone } from "@/lib/milestones";
 import { seedLogoId, type SeedLogoId } from "@/lib/logos";
 import { summarizeLearning, type LearningSummary } from "@/lib/learning";
+import { summarizePulse, type PulseSummary } from "@/lib/pulse";
 import { getDb } from "./client";
 import {
   accountProfiles,
   accounts,
-  aiCalls,
   aiInsights,
   businessReviews,
+  callLogs,
   customerQuestions,
+  helpRequests,
+  pulseResponses,
   learningCompletions,
   generatedMaterials,
   milestones,
   spendMonths,
   usageSnapshots,
   type Account,
+  type CallLog,
   type CustomerQuestion,
+  type HelpRequest,
   type Milestone,
   type SpendMonth,
   type UsageSnapshot,
@@ -78,6 +83,8 @@ export type AccountSummary = {
   expansion: Expansion;
   riskPlay?: Insight<"risk_play">;
   expansionPitch?: Insight<"expansion_pitch">;
+  openRequests: number;
+  pulseAverage: number | null;
 };
 
 function groupBy<T, K>(rows: T[], key: (r: T) => K): Map<K, T[]> {
@@ -151,6 +158,11 @@ export type AccountDetail = {
   insights: Insights;
   health: Health;
   expansion: Expansion;
+  /** Logged calls, newest first. Rep-only. */
+  calls: CallLog[];
+  /** Help the customer asked for in their portal, newest first. */
+  helpRequests: HelpRequest[];
+  pulse: PulseSummary;
   /** Saved tool drafts, by kind. */
   materials: Partial<Record<MaterialKind, { content: string; updatedAt: Date }>>;
 };
@@ -167,7 +179,7 @@ export const getAccountDetail = cache(async (slug: string): Promise<AccountDetai
   if (!row) return null;
 
   const id = row.account.id;
-  const [ms, usage, spend, questions, insights, materials] = await Promise.all([
+  const [ms, usage, spend, questions, insights, materials, calls, requests, pulse] = await Promise.all([
     db.select().from(milestones).where(eq(milestones.accountId, id)).orderBy(asc(milestones.sortOrder)),
     db.select().from(usageSnapshots).where(eq(usageSnapshots.accountId, id)).orderBy(asc(usageSnapshots.date)),
     db.select().from(spendMonths).where(eq(spendMonths.accountId, id)).orderBy(asc(spendMonths.month)),
@@ -178,6 +190,9 @@ export const getAccountDetail = cache(async (slug: string): Promise<AccountDetai
       .orderBy(desc(customerQuestions.askedAt)),
     db.select().from(aiInsights).where(eq(aiInsights.accountId, id)),
     db.select().from(generatedMaterials).where(eq(generatedMaterials.accountId, id)),
+    db.select().from(callLogs).where(eq(callLogs.accountId, id)).orderBy(desc(callLogs.occurredOn), desc(callLogs.createdAt)),
+    db.select().from(helpRequests).where(eq(helpRequests.accountId, id)).orderBy(desc(helpRequests.createdAt)),
+    db.select().from(pulseResponses).where(eq(pulseResponses.accountId, id)),
   ]);
 
   const now = new Date();
@@ -192,6 +207,9 @@ export const getAccountDetail = cache(async (slug: string): Promise<AccountDetai
     insights: toInsights(insights),
     health: healthFor(row.account, row.profile, { usage, spend, milestones: ms, questions }, now),
     expansion: expansionFor(row.account, row.profile, usage, spend),
+    calls,
+    helpRequests: requests,
+    pulse: summarizePulse(pulse, now),
     materials: Object.fromEntries(materials.map((m) => [m.kind, { content: m.content, updatedAt: m.updatedAt }])),
   };
 });
@@ -212,7 +230,7 @@ function expansionFor(a: Account, profile: AccountProfile, usage: UsageSnapshot[
  */
 async function loadBook(now: Date = new Date()): Promise<AccountDetail[]> {
   const db = await getDb();
-  const [accts, profiles, usage, spend, ms, qs, insights, materials] = await Promise.all([
+  const [accts, profiles, usage, spend, ms, qs, insights, materials, calls, requests, pulse] = await Promise.all([
     db.select().from(accounts).orderBy(asc(accounts.createdAt), asc(accounts.name)),
     db.select().from(accountProfiles),
     db.select().from(usageSnapshots).orderBy(asc(usageSnapshots.date)),
@@ -221,8 +239,14 @@ async function loadBook(now: Date = new Date()): Promise<AccountDetail[]> {
     db.select().from(customerQuestions).orderBy(desc(customerQuestions.askedAt)),
     db.select().from(aiInsights),
     db.select().from(generatedMaterials),
+    db.select().from(callLogs).orderBy(desc(callLogs.occurredOn), desc(callLogs.createdAt)),
+    db.select().from(helpRequests).orderBy(desc(helpRequests.createdAt)),
+    db.select().from(pulseResponses),
   ]);
 
+  const callsBy = groupBy(calls, (c) => c.accountId);
+  const requestsBy = groupBy(requests, (r) => r.accountId);
+  const pulseBy = groupBy(pulse, (r) => r.accountId);
   const profileBy = new Map(profiles.map((p) => [p.accountId, p.data]));
   const usageBy = groupBy(usage, (u) => u.accountId);
   const spendBy = groupBy(spend, (s) => s.accountId);
@@ -250,6 +274,9 @@ async function loadBook(now: Date = new Date()): Promise<AccountDetail[]> {
         insights: toInsights(insightsBy.get(a.id) ?? []),
         health: healthFor(a, profile, { usage: u, spend: s, milestones: m, questions: q }, now),
         expansion: expansionFor(a, profile, u, s),
+        calls: callsBy.get(a.id) ?? [],
+        helpRequests: requestsBy.get(a.id) ?? [],
+        pulse: summarizePulse(pulseBy.get(a.id) ?? [], now),
         materials: Object.fromEntries(
           (materialsBy.get(a.id) ?? []).map((x) => [x.kind, { content: x.content, updatedAt: x.updatedAt }]),
         ),
@@ -294,6 +321,8 @@ export function summarize(d: AccountDetail, now: Date = new Date()): AccountSumm
     expansion: d.expansion,
     riskPlay: d.insights.risk_play,
     expansionPitch: d.insights.expansion_pitch,
+    openRequests: d.helpRequests.filter((r) => r.status === "open").length,
+    pulseAverage: d.pulse.average,
   };
 }
 
@@ -374,13 +403,6 @@ export const getCustomerView = cache(async (token: string): Promise<CustomerView
   };
 });
 
-/** How many live Claude calls the app has served, for the Behind the build page. */
-export async function countAiCalls(): Promise<number> {
-  const db = await getDb();
-  const [row] = await db.select({ n: count() }).from(aiCalls).where(eq(aiCalls.status, "ok"));
-  return row?.n ?? 0;
-}
-
 /**
  * Server-only context for the Ask assistant: the customer view plus the account ID and
  * the topics raised during the deal (concern titles only, no rep notes). Never sent to
@@ -459,3 +481,24 @@ export const getCustomerLearning = cache(async (token: string): Promise<Learning
 export async function getAccountIdForToken(token: string): Promise<string | null> {
   return accountIdForToken(token);
 }
+
+export type CustomerSupport = {
+  requests: { id: string; kind: HelpRequest["kind"]; message: string; status: HelpRequest["status"]; createdAt: Date }[];
+  pulse: Pick<PulseSummary, "count" | "average">;
+};
+
+/** For the customer's portal: their own help requests and the team's pulse average (no blocker text). */
+export const getCustomerSupport = cache(async (token: string): Promise<CustomerSupport | null> => {
+  const id = await accountIdForToken(token);
+  if (!id) return null;
+  const db = await getDb();
+  const [requests, pulse] = await Promise.all([
+    db.select().from(helpRequests).where(eq(helpRequests.accountId, id)).orderBy(desc(helpRequests.createdAt)),
+    db.select().from(pulseResponses).where(eq(pulseResponses.accountId, id)),
+  ]);
+  const summary = summarizePulse(pulse);
+  return {
+    requests: requests.slice(0, 5).map((r) => ({ id: r.id, kind: r.kind, message: r.message, status: r.status, createdAt: r.createdAt })),
+    pulse: { count: summary.count, average: summary.average },
+  };
+});

@@ -2,7 +2,7 @@
 
 **A customer success platform for reps without a customer success team, focused on GitHub Copilot.**
 
-Live app: **https://okay-now-what.vercel.app** · How it was built: [/behind-the-build](https://okay-now-what.vercel.app/behind-the-build)
+Live app: **https://okay-now-what.vercel.app**
 
 Designed by Derek DeCesare. Built with [Claude Code](https://claude.com/claude-code).
 
@@ -116,7 +116,7 @@ The local database creates and seeds itself on first run. Without an API key, ev
 ## Project layout
 
 ```
-src/app/(rep)/          Rep side: home, account tabs, call brief, add account, behind the build
+src/app/(rep)/          Rep side: home, account tabs, call brief, add account, customer content library
 src/app/c/[token]/      Customer success portal (private link)
 src/app/api/            Streaming routes: ask, rep-chat, accounts
 src/app/actions/        Server actions: milestones, visits, learning, AI refreshes, reviews, drafts

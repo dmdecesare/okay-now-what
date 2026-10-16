@@ -5,15 +5,16 @@ import { getBook, getSummaries, type AccountSummary } from "@/db/queries";
 import { AtRiskPanel } from "@/components/at-risk-panel";
 import { ExpansionPanel } from "@/components/home/expansion-panel";
 import { AccountsTable } from "@/components/home/accounts-table";
-import { HeroLink, HomeHero, weekSummary, type HeroStat } from "@/components/home/hero";
+import { HomeHero, weekSummary, type HeroStat } from "@/components/home/hero";
 import { SeatUtilization } from "@/components/home/seat-utilization";
 import { PortfolioHealth } from "@/components/home/portfolio-health";
-import { ActivityFeed } from "@/components/home/activity-feed";
+import { QuestionsFeed } from "@/components/home/questions-feed";
+import { HelpRequestsPanel } from "@/components/home/help-requests-panel";
 import { Upcoming } from "@/components/home/upcoming";
 import { HeroAskClaude } from "@/components/rep-chat/rep-chat";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/card";
-import { recentActivity, upcoming } from "@/lib/activity";
+import { questionTopicsThisWeek, recentQuestions, upcoming } from "@/lib/activity";
 import { formatNumber, formatUSD } from "@/lib/format";
 import { pct } from "@/lib/adoption";
 
@@ -47,12 +48,7 @@ async function Book() {
         date={now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
         summary={weekSummary(accounts)}
         stats={heroStats(accounts)}
-        actions={
-          <>
-            <HeroAskClaude />
-            <HeroLink href="/behind-the-build">How this was built</HeroLink>
-          </>
-        }
+        actions={<HeroAskClaude />}
       />
 
       <div className="grid items-start gap-4 lg:grid-cols-2">
@@ -70,8 +66,9 @@ async function Book() {
       <AccountsTable accounts={accounts} />
 
       <div className="grid items-start gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <ActivityFeed events={recentActivity(book, 7, now)} />
+        <div className="space-y-4 lg:col-span-2">
+          <HelpRequestsPanel book={book} />
+          <QuestionsFeed questions={recentQuestions(book, 6)} topics={questionTopicsThisWeek(book, now)} />
         </div>
         <Upcoming items={upcoming(book, 6, now)} />
       </div>

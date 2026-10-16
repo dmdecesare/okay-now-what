@@ -36,6 +36,7 @@ const secretTexts = SEED_ACCOUNTS.flatMap((a) => [
   ...a.profile.stakeholders.map((s) => s.notes),
   ...a.profile.concerns.map((c) => c.response),
   ...collectStrings(a.insights),
+  ...collectStrings(a.calls ?? []),
   ...a.questions.map((q) => q.question),
 ]);
 const secretMarkers = [...new Set(secretTexts.map((t) => norm(t).slice(0, 60)).filter((t) => t.length >= 25))];

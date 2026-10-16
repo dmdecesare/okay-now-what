@@ -16,9 +16,16 @@ export function Sidebar() {
       </div>
 
       <nav aria-label="Main" className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-3 pb-4 pt-2">
-        <Suspense fallback={<NavSkeleton rows={4} />}>
+        <Suspense fallback={<NavSkeleton rows={2} />}>
           <SidebarNav />
         </Suspense>
+
+        <div>
+          <p className="mb-1.5 px-2.5 text-micro font-medium uppercase text-sidebar-muted">Customer content</p>
+          <Suspense fallback={<NavSkeleton rows={3} />}>
+            <SidebarNav section="content" />
+          </Suspense>
+        </div>
 
         <div>
           <p className="mb-1.5 px-2.5 text-micro font-medium uppercase text-sidebar-muted">Accounts</p>

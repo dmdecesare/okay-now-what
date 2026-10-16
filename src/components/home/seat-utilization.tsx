@@ -7,11 +7,10 @@ import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
 /**
- * Active seats against purchased seats, one bar per account. A single measure with its
- * remaining capacity as the track, so no legend colors to decode beyond "active".
+ * Active seats against purchased seats, one full-width bar per account, so accounts compare by share
+ * active. The seat counts sit next to each bar.
  */
 export function SeatUtilization({ accounts }: { accounts: AccountSummary[] }) {
-  const max = Math.max(...accounts.map((a) => a.seats), 1);
   const totalSeats = accounts.reduce((n, a) => n + a.seats, 0);
   const totalActive = accounts.reduce((n, a) => n + (a.activeSeats ?? 0), 0);
 
@@ -34,7 +33,6 @@ export function SeatUtilization({ accounts }: { accounts: AccountSummary[] }) {
       />
       <ul className="space-y-5 px-5 py-5">
         {accounts.map((a) => {
-          const width = (a.seats / max) * 100;
           const active = a.activeSeats ?? 0;
           const share = a.seats ? (active / a.seats) * 100 : 0;
           const falling = (a.activeChange ?? 0) <= -10;
@@ -52,7 +50,6 @@ export function SeatUtilization({ accounts }: { accounts: AccountSummary[] }) {
               </div>
               <div
                 className="h-3 overflow-hidden rounded-full bg-surface-strong"
-                style={{ width: `${Math.max(width, 18)}%` }}
                 role="img"
                 aria-label={`${a.name}: ${formatNumber(active)} of ${formatNumber(a.seats)} seats active`}
               >

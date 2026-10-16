@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { getSummaries } from "@/db/queries";
@@ -25,19 +24,6 @@ export default function RepLayout({ children }: { children: React.ReactNode }) {
             <main className="mx-auto w-full max-w-[1240px] flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
               {children}
             </main>
-            <footer className="border-t border-border print:hidden">
-              <div className="mx-auto flex max-w-[1240px] flex-wrap items-center justify-between gap-3 px-4 py-5 text-sm text-ink-muted sm:px-6 lg:px-8">
-                <p>Designed by Derek DeCesare. Built with Claude Code.</p>
-                <div className="flex gap-5">
-                  <Link href="/behind-the-build" className="hover:text-ink">
-                    Behind the build
-                  </Link>
-                  <Link href="/design" className="hover:text-ink">
-                    Design system
-                  </Link>
-                </div>
-              </div>
-            </footer>
           </div>
         </div>
         <Suspense fallback={null}>

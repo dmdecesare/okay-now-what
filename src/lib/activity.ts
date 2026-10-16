@@ -1,57 +1,46 @@
 import type { AccountDetail } from "@/db/queries";
 import { daysBetween, todayISO } from "./dates";
-import { seedLogoId } from "./logos";
+import type { QuestionTopic } from "./schemas";
 
-// What happened recently across the book, and what's coming up. Pure: built from data already loaded.
+// What customers are asking across the book, and what's coming up. Pure: built from data already loaded.
 
-export type ActivityKind = "milestone_customer" | "milestone_rep" | "question" | "visit" | "account_added";
-
-export type ActivityEvent = {
+export type CustomerQuestionItem = {
+  id: string;
   at: Date;
   slug: string;
   name: string;
-  kind: ActivityKind;
-  text: string;
-  detail?: string;
+  question: string;
+  topic: QuestionTopic;
+  answered: boolean;
 };
 
-export function recentActivity(book: AccountDetail[], limit = 7, now: Date = new Date()): ActivityEvent[] {
-  const events: ActivityEvent[] = [];
-  for (const d of book) {
-    const { slug, name } = d.account;
-    const champion = d.profile.champion.name ?? "The champion";
-    for (const m of d.milestones) {
-      if (m.status !== "done" || !m.completedAt) continue;
-      events.push({
-        at: m.completedAt,
-        slug,
-        name,
-        kind: m.completedBy === "customer" ? "milestone_customer" : "milestone_rep",
-        text: m.completedBy === "customer" ? `${name} checked off a milestone` : "Milestone marked done",
-        detail: m.title,
-      });
-    }
-    for (const q of d.questions) {
-      events.push({ at: q.askedAt, slug, name, kind: "question", text: `${name} asked the Ask assistant`, detail: q.question });
-    }
-    if (d.account.championLastVisitAt) {
-      events.push({
-        at: d.account.championLastVisitAt,
-        slug,
-        name,
-        kind: "visit",
-        text: `${champion} opened the success portal`,
-      });
-    }
-    // Demo accounts are re-created on every reset, so "added" is only news for accounts built from notes.
-    if (!seedLogoId(slug)) {
-      events.push({ at: d.account.createdAt, slug, name, kind: "account_added", text: `${name} added to your book` });
-    }
-  }
-  return events
-    .filter((e) => e.at.getTime() <= now.getTime())
+/** The latest questions customers asked the Ask assistant, across every account. */
+export function recentQuestions(book: AccountDetail[], limit = 6): CustomerQuestionItem[] {
+  return book
+    .flatMap((d) =>
+      d.questions.map((q) => ({
+        id: q.id,
+        at: q.askedAt,
+        slug: d.account.slug,
+        name: d.account.name,
+        question: q.question,
+        topic: q.topic,
+        answered: !!q.answer,
+      })),
+    )
     .sort((a, b) => b.at.getTime() - a.at.getTime())
     .slice(0, limit);
+}
+
+/** Questions asked in the last 7 days, by topic. */
+export function questionTopicsThisWeek(book: AccountDetail[], now: Date = new Date()): Partial<Record<QuestionTopic, number>> {
+  const out: Partial<Record<QuestionTopic, number>> = {};
+  for (const d of book) {
+    for (const q of d.questions) {
+      if (daysBetween(q.askedAt, now) <= 7) out[q.topic] = (out[q.topic] ?? 0) + 1;
+    }
+  }
+  return out;
 }
 
 export type UpcomingKind = "pilot_end" | "renewal" | "milestone";
@@ -76,10 +65,10 @@ export function upcoming(book: AccountDetail[], limit = 6, now: Date = new Date(
       const end = new Date(`${stageStartDate}T00:00:00Z`);
       end.setUTCDate(end.getUTCDate() + pilotLengthDays - 1);
       const date = end.toISOString().slice(0, 10);
-      items.push({ date, inDays: daysBetween(today, date), slug, name, kind: "pilot_end", label: "Pilot ends, readout due", overdue: false });
+      items.push({ date, inDays: daysBetween(today, date), slug, name, kind: "pilot_end", label: "Pilot ends: readout to the decision maker", overdue: false });
     }
-    if (renewalDate) {
-      items.push({ date: renewalDate, inDays: daysBetween(today, renewalDate), slug, name, kind: "renewal", label: "Renewal", overdue: false });
+    if (renewalDate && daysBetween(today, renewalDate) <= 365) {
+      items.push({ date: renewalDate, inDays: daysBetween(today, renewalDate), slug, name, kind: "renewal", label: "Contract renewal", overdue: false });
     }
     const open = d.milestones.filter((m) => m.status !== "done").sort((a, b) => a.dueDate.localeCompare(b.dueDate));
     for (const m of open.slice(0, 2)) {

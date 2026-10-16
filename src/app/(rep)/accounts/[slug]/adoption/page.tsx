@@ -15,6 +15,7 @@ import { getLearningForAccount } from "@/db/queries";
 import { ROLE_LABELS } from "@/lib/learning";
 import { CardBody, CardHeader } from "@/components/ui/card";
 import { GraduationCap } from "lucide-react";
+import { PulseSummaryCard } from "@/components/account/pulse-summary";
 import { loadAccount } from "../load";
 
 export default function AdoptionPage({ params }: PageProps<"/accounts/[slug]/adoption">) {
@@ -26,7 +27,7 @@ export default function AdoptionPage({ params }: PageProps<"/accounts/[slug]/ado
 }
 
 async function Adoption({ params }: { params: PageProps<"/accounts/[slug]/adoption">["params"] }) {
-  const { account, usage, insights } = await loadAccount(params);
+  const { account, usage, insights, pulse } = await loadAccount(params);
   const learning = await getLearningForAccount(account.id);
   if (usage.length === 0) return <NoUsageNote title="No usage data yet" />;
 
@@ -87,6 +88,8 @@ async function Adoption({ params }: { params: PageProps<"/accounts/[slug]/adopti
           </ol>
         )}
       </InsightCard>
+
+      <PulseSummaryCard pulse={pulse} />
 
       <Card className="p-0">
         <CardHeader
