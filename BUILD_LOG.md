@@ -96,3 +96,24 @@ A few lines per session. This feeds pages 5 and 6 of the PDF.
 - The new anti-framing header blocked Claude's own phone-width test. It switched to "same origin only", which still stops other sites from embedding the app.
 **Anything that surprised me about Claude:** It built an account from two sentences of notes to test empty states, and Claude's summary flagged that the notes were thin and what to ask on the next call.
 **Screenshot to capture for the PDF:** The customer error page inside the customer shell; a phone-width view of Bluestone's Adoption tab.
+
+## Session 8: Phase 8, deploy to Vercel (2026-10-16)
+
+**Date and time spent:**
+**What I asked Claude Code to do:** Deploy to Vercel with a hosted database, add the API key as an environment variable, and test the live URL end to end.
+**Live URL:** https://okay-now-what.vercel.app
+**What worked on the first try:** The deploy itself. The app built on Vercel and served from US East, next to the Neon database.
+**What broke and how we fixed it:**
+- I needed help finding the terminal and pasting commands. Claude opened the Terminal panel for me and turned the key upload into a short command (`npm run vercel:add-key`), so I never had to paste the key itself.
+- Connecting Neon also copied the live database settings into my local .env.local. That would have pointed my local app at the live database. Claude caught it and removed them, keeping only my API key.
+**Acceptance checklist (SPEC section 10):**
+- [x] Live URL works in a fresh browser
+- [x] API key not visible in the browser (scanned 18 scripts and the page HTML: 0 matches)
+- [x] Every video and doc link loads (52 of 52)
+- [x] Customer view shows no internal data (leak check on 24 live customer pages)
+- [x] Milestone check-off syncs both ways
+- [x] Adding an account works in under a minute (24 seconds live)
+- [x] Ask answers in context and saves the question (5 seconds live)
+- [x] App still usable if an AI call fails (tested locally with a wrong key; seeded content needs no AI)
+**Before recording:** run `npm run db:prod:reset` to restore the clean demo. Customer links change on every reset, so copy them from the app afterward.
+**Screenshot to capture for the PDF:** The live URL in the browser; Vercel dashboard showing the deployment.
