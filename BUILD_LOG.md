@@ -117,3 +117,12 @@ A few lines per session. This feeds pages 5 and 6 of the PDF.
 - [x] App still usable if an AI call fails (tested locally with a wrong key; seeded content needs no AI)
 **Before recording:** run `npm run db:prod:reset` to restore the clean demo. Customer links change on every reset, so copy them from the app afterward.
 **Screenshot to capture for the PDF:** The live URL in the browser; Vercel dashboard showing the deployment.
+
+## Session 9: Phase 9, Behind the build and public repo (2026-10-16)
+
+**Date and time spent:**
+**What I asked Claude Code to do:** Build the Behind the build page and the README, and publish the code to a public GitHub repo after a secrets check.
+**What worked on the first try:** The Behind the build page reads the real prompts straight from the code, so it can't drift. It fit at phone width even with every prompt open.
+**What broke and how we fixed it:** The GitHub CLI wasn't installed. Claude downloaded the official release, verified its checksum, and installed it in my home folder. I signed in with a one-time code.
+**Secrets check:** `npm run check:secrets` scanned every file and every commit for keys, tokens, database passwords, my personal email, and private files. It came back clean, and Claude proved it works by planting a fake key in a throwaway copy, which it caught.
+**Screenshot to capture for the PDF:** The Behind the build page (architecture and "Where Claude runs live"); the GitHub repo page.

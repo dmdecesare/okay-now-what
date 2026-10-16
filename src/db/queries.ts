@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { asc, desc, eq } from "drizzle-orm";
+import { asc, count, desc, eq } from "drizzle-orm";
 import { assessHealth, activePct, type HealthStatus, type Signal } from "@/lib/health";
 import { stageDay } from "@/lib/dates";
 import {
@@ -16,6 +16,7 @@ import { getDb } from "./client";
 import {
   accountProfiles,
   accounts,
+  aiCalls,
   aiInsights,
   customerQuestions,
   generatedMaterials,
@@ -282,6 +283,13 @@ export const getCustomerView = cache(async (token: string): Promise<CustomerView
     usage: usage.map((u) => ({ date: u.date, activeSeats: u.activeSeats, teams: u.teams })),
   };
 });
+
+/** How many live Claude calls the app has served, for the Behind the build page. */
+export async function countAiCalls(): Promise<number> {
+  const db = await getDb();
+  const [row] = await db.select({ n: count() }).from(aiCalls).where(eq(aiCalls.status, "ok"));
+  return row?.n ?? 0;
+}
 
 /**
  * Server-only context for the Ask assistant: the customer view plus the account ID and

@@ -18,7 +18,9 @@
     "db:migrate": "tsx scripts/migrate.ts",
     "db:prod:migrate": "tsx --env-file=.env.production.local scripts/migrate.ts",
     "db:prod:reset": "tsx --env-file=.env.production.local scripts/seed.ts",
-    "vercel:add-key": "grep \"^ANTHROPIC_API_KEY=\" .env.local | cut -d= -f2- | tr -d \"\\\"\\n\" | npx --yes vercel@62.2.0 env add ANTHROPIC_API_KEY production --sensitive"
+    "vercel:add-key": "grep \"^ANTHROPIC_API_KEY=\" .env.local | cut -d= -f2- | tr -d \"\\\"\\n\" | npx --yes vercel@62.2.0 env add ANTHROPIC_API_KEY production --sensitive",
+    "check:secrets": "tsx scripts/check-secrets.ts",
+    "stats": "tsx scripts/build-stats.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.135.0",
