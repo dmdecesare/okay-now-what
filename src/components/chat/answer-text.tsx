@@ -59,7 +59,7 @@ function inline(text: string, keyBase: string, internal?: ReadonlySet<string>): 
 type Block =
   | { kind: "p"; lines: string[] }
   | { kind: "code"; lines: string[]; open: boolean }
-  | { kind: "ol"; items: { text: string; subs: string[] }[] }
+  | { kind: "ol"; start: number; items: { text: string; subs: string[] }[] }
   | { kind: "ul"; items: string[] };
 
 const NUMBERED = /^\s*\d+[.)]\s+/;
@@ -84,15 +84,30 @@ function parse(text: string): Block[] {
       blocks.push({ kind: "p", lines: [] });
       continue;
     }
+    // Models often put a blank line between list items. A list carries on across blank lines,
+    // so "1. ... (blank) 2. ..." stays one list instead of several lists that each start at 1.
+    const prevList = () => {
+      let i = blocks.length - 1;
+      while (i >= 0 && blocks[i].kind === "p" && (blocks[i] as { lines: string[] }).lines.length === 0) i--;
+      const b = blocks[i];
+      if (b && (b.kind === "ol" || b.kind === "ul")) {
+        blocks.length = i + 1;
+        return b;
+      }
+      return undefined;
+    };
     if (NUMBERED.test(line)) {
       const item = { text: line.replace(NUMBERED, ""), subs: [] as string[] };
-      if (last?.kind === "ol") last.items.push(item);
-      else blocks.push({ kind: "ol", items: [item] });
+      const list = prevList();
+      if (list?.kind === "ol") list.items.push(item);
+      else blocks.push({ kind: "ol", start: Number(line.trim().match(/^\d+/)?.[0] ?? 1), items: [item] });
     } else if (BULLET.test(line)) {
       const text = line.replace(BULLET, "");
-      // Bullets right after a numbered item belong to it.
-      if (last?.kind === "ol") last.items.at(-1)!.subs.push(text);
-      else if (last?.kind === "ul") last.items.push(text);
+      const nested = /^\s{2,}/.test(raw);
+      // Bullets right after a numbered item (or indented under one) belong to it.
+      const list = last?.kind === "ol" || nested ? prevList() : last?.kind === "ul" ? last : prevList();
+      if (list?.kind === "ol" && (last?.kind === "ol" || nested)) list.items.at(-1)!.subs.push(text);
+      else if (list?.kind === "ul") list.items.push(text);
       else blocks.push({ kind: "ul", items: [text] });
     } else {
       const clean = line.replace(/^#+\s*/, "");
@@ -109,7 +124,7 @@ export function AnswerText({ text, internalHrefs }: { text: string; internalHref
       {parse(text).map((b, bi) => {
         if (b.kind === "ol") {
           return (
-            <ol key={bi} className="list-decimal space-y-1.5 pl-5">
+            <ol key={bi} start={b.start} className="list-decimal space-y-1.5 pl-5">
               {b.items.map((it, ii) => (
                 <li key={ii}>
                   {inline(it.text, `${bi}-${ii}`, internalHrefs)}
