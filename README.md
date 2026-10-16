@@ -77,7 +77,7 @@ The Anthropic API key lives only in a server environment variable. It never reac
 |---|---|
 | `npm run check` | TypeScript, ESLint, and the UI copy rule (no em dashes) |
 | `npm run check:health` | The risk and growth rules still tell the demo story |
-| `npm run check:leaks [url]` | Every customer page (10 per account, including the business review), for any rep-only content. Works against the live URL |
+| `npm run check:leaks [url]` | Every customer page (11 per account), for any rep-only content. The Value page may show the customer's own dollar figures; every other rule still applies. Works against the live URL |
 | `npm run check:links` | All 52 resource links load, stay on official GitHub sites, and match their titles. Videos come from GitHub's official channel |
 | `npm run check:secrets` | Every file and every commit in history, for keys, tokens, database passwords, and private files |
 

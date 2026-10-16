@@ -5,6 +5,8 @@ import { generateToolAction } from "@/app/actions/ai";
 import type { AccountProfile, MaterialKind } from "@/lib/schemas";
 import { getAccountReview, getCustomerView, getLearningForAccount } from "@/db/queries";
 import { ReviewToolCard } from "@/components/review/review-tool-card";
+import { ValueToolCard } from "@/components/review/value-tool-card";
+import { computeRoi } from "@/lib/roi";
 import { loadAccount } from "../load";
 
 type Tool = { kind: MaterialKind; title: string; description: string; pilotOnly?: boolean };
@@ -47,7 +49,8 @@ export default function ToolsPage({ params }: PageProps<"/accounts/[slug]/tools"
 }
 
 async function Tools({ params }: { params: PageProps<"/accounts/[slug]/tools">["params"] }) {
-  const { account, profile, materials } = await loadAccount(params);
+  const { account, profile, materials, usage, spend } = await loadAccount(params);
+  const roi = computeRoi({ seats: account.seats, usage, spend, assumptions: profile.roiAssumptions });
   const tools = TOOLS.filter((t) => !t.pilotOnly || account.stage === "pilot");
   const [view, review, learning] = await Promise.all([
     getCustomerView(account.customerToken),
@@ -57,6 +60,7 @@ async function Tools({ params }: { params: PageProps<"/accounts/[slug]/tools">["
 
   return (
     <div className="space-y-6">
+      <ValueToolCard slug={account.slug} token={account.customerToken} roi={roi} />
       {view && (
         <ReviewToolCard slug={account.slug} token={account.customerToken} view={view} review={review} learning={learning} />
       )}

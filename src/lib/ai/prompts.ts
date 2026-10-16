@@ -9,6 +9,7 @@ import { DOC_CATALOG } from "@/lib/resources";
 import type { MaterialKind, NewAccountInput } from "@/lib/schemas";
 import { GUIDE_TOPICS } from "@/lib/guide-topics";
 import { BRIEF_WINDOW_DAYS, recentChanges } from "@/lib/brief";
+import { computeRoi } from "@/lib/roi";
 
 // ============================================================================
 // Every prompt Claude runs in this app, in one place (SPEC section 7).
@@ -411,7 +412,15 @@ function compactAccountLine(d: AccountDetail, now: Date): string {
     d.health.signals.length ? ` (${d.health.signals.map((s) => s.label).join("; ")})` : ""
   }. Growth: ${d.expansion.level}${d.expansion.signals.length ? ` (${d.expansion.signals.map((s) => s.label).join("; ")})` : ""}. Plan: ${done} of ${
     d.milestones.length
-  } done, ${overdue} overdue. Champion ${d.profile.champion.name ?? "not named"} last opened the portal ${visit}. Questions in the last 7 days: ${recentQs.length}. Open help requests: ${d.helpRequests.filter((r) => r.status === "open").length}. Developer pulse: ${d.pulse.average != null ? `${d.pulse.average}/5 from ${d.pulse.count} answers` : "no answers yet"}. Last logged call: ${d.calls[0] ? formatDate(d.calls[0].occurredOn) : "none"}.`;
+  } done, ${overdue} overdue. Champion ${d.profile.champion.name ?? "not named"} last opened the portal ${visit}. Questions in the last 7 days: ${recentQs.length}. Open help requests: ${d.helpRequests.filter((r) => r.status === "open").length}. Developer pulse: ${d.pulse.average != null ? `${d.pulse.average}/5 from ${d.pulse.count} answers` : "no answers yet"}. Last logged call: ${d.calls[0] ? formatDate(d.calls[0].occurredOn) : "none"}. ${roiLine(d)}`;
+}
+
+/** The estimate shown on the customer's Value page. */
+function roiLine(d: AccountDetail): string {
+  const r = computeRoi({ seats: d.account.seats, usage: d.usage, spend: d.spend, assumptions: d.profile.roiAssumptions });
+  return r.live
+    ? `Value page estimate: about $${r.valueSaved} a month in time saved (${r.hoursSaved} hours) vs $${r.cost} cost, ${r.roiMultiple}x ROI.`
+    : "Value page: not live yet.";
 }
 
 /** Help requests, pulse blockers, and logged calls. Customer-written text is fenced off as data. */
@@ -430,7 +439,8 @@ ${requests || "  - none"}
 Developer pulse: ${d.pulse.average != null ? `${d.pulse.average} out of 5 from ${d.pulse.count} answers in 30 days` : "no answers yet"}. Blockers mentioned:
 ${blockers || "  - none"}
 Recent logged calls:
-${calls || "  - none"}`;
+${calls || "  - none"}
+${roiLine(d)}`;
 }
 
 function focusSection(d: AccountDetail, now: Date): string {

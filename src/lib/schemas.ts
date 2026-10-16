@@ -66,6 +66,11 @@ export const accountProfileSchema = z.object({
   setupSteps: z.array(setupStepSchema),
   championKit: championKitSchema,
   guides: z.array(guidePickSchema),
+  /** Value-report assumptions the rep can edit. Defaults apply when missing. */
+  roiAssumptions: z
+    .object({ hoursSavedPerWeek: z.number(), hourlyCost: z.number() })
+    .nullable()
+    .optional(),
 });
 
 export type AccountProfile = z.infer<typeof accountProfileSchema>;

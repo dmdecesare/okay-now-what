@@ -9,6 +9,7 @@ export const CUSTOMER_NAV = [
   { href: "/setup", label: "Setup guide" },
   { href: "/kit", label: "Champion kit" },
   { href: "/progress", label: "Progress" },
+  { href: "/value", label: "Value" },
   { href: "/review", label: "Business review" },
 ] as const;
 

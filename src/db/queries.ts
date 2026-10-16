@@ -502,3 +502,36 @@ export const getCustomerSupport = cache(async (token: string): Promise<CustomerS
     pulse: { count: summary.count, average: summary.average },
   };
 });
+
+export type CustomerValue = {
+  seats: number;
+  usage: { date: string; activeSeats: number; teams: TeamUsage[] }[];
+  spend: { month: string; seatSpend: number; usageSpend: number }[];
+  assumptions: AccountProfile["roiAssumptions"];
+};
+
+/**
+ * For the customer's Value page only: what they pay per month (their own contract) and the value
+ * assumptions. Kept out of CustomerView so no other customer page can receive spend data.
+ */
+export const getCustomerValue = cache(async (token: string): Promise<CustomerValue | null> => {
+  if (!isTokenShape(token)) return null;
+  const db = await getDb();
+  const [row] = await db
+    .select({ account: accounts, profile: accountProfiles.data })
+    .from(accounts)
+    .innerJoin(accountProfiles, eq(accountProfiles.accountId, accounts.id))
+    .where(eq(accounts.customerToken, token))
+    .limit(1);
+  if (!row) return null;
+  const [usage, spend] = await Promise.all([
+    db.select().from(usageSnapshots).where(eq(usageSnapshots.accountId, row.account.id)).orderBy(asc(usageSnapshots.date)),
+    db.select().from(spendMonths).where(eq(spendMonths.accountId, row.account.id)).orderBy(asc(spendMonths.month)),
+  ]);
+  return {
+    seats: row.account.seats,
+    usage: usage.map((u) => ({ date: u.date, activeSeats: u.activeSeats, teams: u.teams })),
+    spend: spend.map((s) => ({ month: s.month, seatSpend: s.seatSpend, usageSpend: s.usageSpend })),
+    assumptions: row.profile.roiAssumptions ?? null,
+  };
+});

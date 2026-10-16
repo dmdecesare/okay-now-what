@@ -91,7 +91,11 @@ async function main() {
       const visible = html.replace(/<script[\s\S]*?<\/script>/g, "");
       pages++;
       const hits = [
-        ...LITERAL_MARKERS.filter(([, re]) => re.test(visible)).map(([label]) => label),
+        // The Value page is the one place customers see dollar figures (their own savings and
+        // cost, by design). Every other check still runs on it.
+        ...LITERAL_MARKERS.filter(([label, re]) => !(tab === "/value" && label === "dollar amount") && re.test(visible)).map(
+          ([label]) => label,
+        ),
         ...[...secretMarkers, ...accountMarkers].filter((m) => flat.includes(m)).map((m) => `rep-only text "${m.slice(0, 30)}..."`),
       ];
       if (hits.length > 0) {
