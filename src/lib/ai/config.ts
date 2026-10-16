@@ -47,6 +47,10 @@ export const RATE_LIMITS = {
   askPerHour: Number(process.env.RATE_LIMIT_ASK_PER_HOUR ?? 20),
   /** Rep refreshes and tool drafts per IP per hour. */
   repPerHour: Number(process.env.RATE_LIMIT_REP_PER_HOUR ?? 30),
-  /** All AI calls across the whole app per day. */
-  globalPerDay: Number(process.env.RATE_LIMIT_GLOBAL_PER_DAY ?? 400),
+  /** Full account builds per IP per hour (the most expensive call). */
+  buildPerHour: Number(process.env.RATE_LIMIT_BUILD_PER_HOUR ?? 6),
+  /** All AI calls across the whole app per day. Worst case stays under a $20 monthly spend limit. */
+  globalPerDay: Number(process.env.RATE_LIMIT_GLOBAL_PER_DAY ?? 300),
+  /** Non-AI writes (milestone check-offs, visits) per IP per minute. */
+  writesPerMinute: Number(process.env.RATE_LIMIT_WRITES_PER_MINUTE ?? 60),
 };

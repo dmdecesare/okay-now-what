@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   }
 
   const ipHash = hashIp(callerIp(req.headers));
-  if (await isRateLimited("rep", ipHash)) {
+  if (await isRateLimited("build", ipHash)) {
     await recordCall("buildAccount", ipHash, "limited");
     return Response.json({ error: BREATHER_MESSAGE }, { status: 429 });
   }

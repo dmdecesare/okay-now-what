@@ -25,25 +25,27 @@ async function Guides({ params }: { params: PageProps<"/c/[token]/guides">["para
 
   return (
     <div className="space-y-8">
-      <section>
-        <h2 className="text-title font-semibold">Picked for {c.name}</h2>
-        <p className="mb-4 mt-1 text-sm text-ink-muted">Start here. Each one is chosen for what your team told us.</p>
-        <div className="grid gap-4 md:grid-cols-2">
-          {c.profile.guides.map((g) => {
-            const topic = GUIDE_TOPIC_BY_ID[g.topic];
-            return (
-              <Card key={g.topic} className="border-accent/30">
-                <div className="flex items-center gap-2">
-                  <Badge tone="accent">{topic.level === "role" ? "Role track" : topic.level}</Badge>
-                  <h3 className="font-semibold">{topic.title}</h3>
-                </div>
-                <p className="mt-2 text-sm">{g.why}</p>
-                <DocLinks topic={g.topic} />
-              </Card>
-            );
-          })}
-        </div>
-      </section>
+      {c.profile.guides.length > 0 && (
+        <section>
+          <h2 className="text-title font-semibold">Picked for {c.name}</h2>
+          <p className="mb-4 mt-1 text-sm text-ink-muted">Start here. Each one is chosen for what your team told us.</p>
+          <div className="grid gap-4 md:grid-cols-2">
+            {c.profile.guides.map((g) => {
+              const topic = GUIDE_TOPIC_BY_ID[g.topic];
+              return (
+                <Card key={g.topic} className="border-accent/30">
+                  <div className="flex items-center gap-2">
+                    <Badge tone="accent">{topic.level === "role" ? "Role track" : topic.level}</Badge>
+                    <h3 className="font-semibold">{topic.title}</h3>
+                  </div>
+                  <p className="mt-2 text-sm">{g.why}</p>
+                  <DocLinks topic={g.topic} />
+                </Card>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {GUIDE_LEVELS.map((level) => (
         <section key={level.id}>

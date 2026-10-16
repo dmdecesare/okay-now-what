@@ -84,3 +84,15 @@ A few lines per session. This feeds pages 5 and 6 of the PDF.
 **Anything that surprised me about Claude:** The leak checker it wrote in Phase 3 caught a real problem in Phase 6. Testing paid off.
 **Numbers:** About $0.065 per account built (Claude Sonnet 5.5).
 **Screenshot to capture for the PDF:** The build progress checklist mid-build; the new account Overview with "Done. Here's their plan."
+
+## Session 7: Phase 7, polish (2026-10-15)
+
+**Date and time spent:**
+**What I asked Claude Code to do:** Polish pass: empty states, loading states, error fallbacks, a mobile check, and rate limiting.
+**What worked on the first try:** All 66 pages passed a scripted phone-width check (375px) with no sideways scrolling.
+**What broke and how we fixed it:**
+- There were no error pages, so a database problem would have shown a raw error. Claude added friendly "Something went sideways" pages at each level and tested them by pointing the app at a broken database.
+- The first test showed a customer could land on an error page offering a link to the rep's book of business. Claude made the customer header resilient so customers always see the customer version.
+- The new anti-framing header blocked Claude's own phone-width test. It switched to "same origin only", which still stops other sites from embedding the app.
+**Anything that surprised me about Claude:** It built an account from two sentences of notes to test empty states, and Claude's summary flagged that the notes were thin and what to ask on the next call.
+**Screenshot to capture for the PDF:** The customer error page inside the customer shell; a phone-width view of Bluestone's Adoption tab.

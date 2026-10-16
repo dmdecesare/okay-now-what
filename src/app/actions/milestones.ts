@@ -5,6 +5,8 @@ import { refresh } from "next/cache";
 import { getDb } from "@/db/client";
 import { isTokenShape } from "@/db/queries";
 import { accounts, milestones } from "@/db/schema";
+import { headers } from "next/headers";
+import { BREATHER_MESSAGE, allowWrite, callerIp, hashIp } from "@/lib/rate-limit";
 
 // Server actions are reachable by direct POST, so each one re-checks that the
 // milestone belongs to the account named by the caller's token or slug.
@@ -17,6 +19,8 @@ async function setDone(
   done: boolean,
   by: "rep" | "customer",
 ): Promise<ActionResult> {
+  if (!allowWrite(hashIp(callerIp(await headers())))) return { ok: false, message: BREATHER_MESSAGE };
+
   const db = await getDb();
   const [account] = await db.select({ id: accounts.id }).from(accounts).where(accountWhere).limit(1);
   if (!account) return { ok: false, message: "We couldn't find that plan." };

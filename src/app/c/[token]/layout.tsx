@@ -35,7 +35,9 @@ export default function CustomerLayout({ children, params }: LayoutProps<"/c/[to
 async function CustomerHeader({ params }: { params: LayoutProps<"/c/[token]">["params"] }) {
   await connection();
   const { token } = await params;
-  const customer = await getCustomerView(token);
+  // If the database is unavailable, keep a plain header so the page's own friendly
+  // error (c/[token]/error.tsx) shows inside the customer shell.
+  const customer = await getCustomerView(token).catch(() => null);
 
   return (
     <header className="border-b border-border bg-accent-soft">

@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Card } from "@/components/ui/card";
+import { Card, EmptyState } from "@/components/ui/card";
 import { CopyButton } from "@/components/ui/copy-button";
 import { TabSkeleton } from "@/components/account/tab-skeleton";
 import type { AccountProfile } from "@/lib/schemas";
@@ -35,6 +35,13 @@ async function Setup({ params }: { params: PageProps<"/c/[token]/setup">["params
           The admin and security steps that matter for {c.name}, built around the questions your team raised.
         </p>
       </div>
+
+      {c.profile.setupSteps.length === 0 && (
+        <EmptyState
+          title="Your setup guide is on its way"
+          body="Your account team is putting together the admin and security steps for your rollout."
+        />
+      )}
 
       {AUDIENCES.map((aud) => {
         const steps = c.profile.setupSteps.filter((s) => s.audience === aud.id);

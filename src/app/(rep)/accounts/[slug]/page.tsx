@@ -32,6 +32,9 @@ async function Overview({
           <Card>
             <h2 className="font-semibold">What we heard</h2>
             <p className="mt-1 text-sm text-ink-muted">{profile.summary}</p>
+            {profile.goals.length === 0 && (
+              <p className="mt-4 text-sm text-ink-faint">No goals came through in the notes yet.</p>
+            )}
             <ul className="mt-4 space-y-4">
               {profile.goals.map((g) => (
                 <li key={g.goal} className="border-l-2 border-accent pl-4">
@@ -51,6 +54,9 @@ async function Overview({
   
           <Card>
             <h2 className="font-semibold">Concerns raised during the deal</h2>
+            {profile.concerns.length === 0 && (
+              <p className="mt-4 text-sm text-ink-faint">None noted. Worth asking what could slow them down.</p>
+            )}
             <ul className="mt-4 space-y-4">
               {profile.concerns.map((c) => (
                 <li key={c.concern}>
@@ -95,6 +101,9 @@ async function Overview({
   
           <Card>
             <p className="text-xs font-medium uppercase tracking-wide text-ink-faint">Stakeholders</p>
+            {profile.stakeholders.length === 0 && (
+              <p className="mt-3 text-sm text-ink-faint">No one else named yet. Ask who signs off and who rolls it out.</p>
+            )}
             <ul className="mt-3 space-y-4">
               {profile.stakeholders.map((s) => (
                 <li key={s.title}>

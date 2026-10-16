@@ -7,8 +7,11 @@ import { RATE_LIMITS, type AiFeature } from "./ai/config";
 
 // Database-backed limits, so they hold across serverless instances on Vercel.
 
-const ASK_FEATURES: AiFeature[] = ["ask"];
-const REP_FEATURES: AiFeature[] = ["nextBestAction", "riskPlay", "questionThemes", "tools", "buildAccount"];
+const GROUPS = {
+  ask: { features: ["ask"] as AiFeature[], limit: () => RATE_LIMITS.askPerHour },
+  rep: { features: ["nextBestAction", "riskPlay", "questionThemes", "tools"] as AiFeature[], limit: () => RATE_LIMITS.repPerHour },
+  build: { features: ["buildAccount"] as AiFeature[], limit: () => RATE_LIMITS.buildPerHour },
+};
 
 export function hashIp(ip: string): string {
   return createHash("sha256").update(`okay-now-what:${ip}`).digest("hex").slice(0, 32);
@@ -19,12 +22,12 @@ export function callerIp(headers: Headers): string {
   return headers.get("x-forwarded-for")?.split(",")[0]?.trim() || headers.get("x-real-ip") || "local";
 }
 
-export async function isRateLimited(group: "ask" | "rep", ipHash: string): Promise<boolean> {
+export async function isRateLimited(group: keyof typeof GROUPS, ipHash: string): Promise<boolean> {
   const db = await getDb();
   const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
   const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const features = group === "ask" ? ASK_FEATURES : REP_FEATURES;
-  const limit = group === "ask" ? RATE_LIMITS.askPerHour : RATE_LIMITS.repPerHour;
+  const { features } = GROUPS[group];
+  const limit = GROUPS[group].limit();
 
   const [[mine], [all]] = await Promise.all([
     db
@@ -65,6 +68,23 @@ export async function recordCall(
   } catch {
     // Logging a call must never break the feature.
   }
+}
+
+// Light, in-memory limit for non-AI writes (milestone check-offs, visit tracking).
+// Per server instance, which is enough to stop casual spam on a public demo link.
+const writeLog = new Map<string, number[]>();
+
+export function allowWrite(ipHash: string): boolean {
+  const now = Date.now();
+  const recent = (writeLog.get(ipHash) ?? []).filter((t) => now - t < 60_000);
+  if (recent.length >= RATE_LIMITS.writesPerMinute) {
+    writeLog.set(ipHash, recent);
+    return false;
+  }
+  recent.push(now);
+  writeLog.set(ipHash, recent);
+  if (writeLog.size > 5000) writeLog.clear();
+  return true;
 }
 
 export const BREATHER_MESSAGE = "Taking a short breather. Please try again in a bit.";

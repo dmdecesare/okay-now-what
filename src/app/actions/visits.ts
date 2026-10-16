@@ -4,6 +4,8 @@ import { and, eq, isNull, lt, or } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { isTokenShape } from "@/db/queries";
 import { accounts } from "@/db/schema";
+import { headers } from "next/headers";
+import { allowWrite, callerIp, hashIp } from "@/lib/rate-limit";
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
@@ -14,6 +16,7 @@ const ONE_HOUR_MS = 60 * 60 * 1000;
  */
 export async function recordVisit(token: string): Promise<void> {
   if (!isTokenShape(token)) return;
+  if (!allowWrite(hashIp(callerIp(await headers())))) return;
   try {
     const db = await getDb();
     const now = new Date();

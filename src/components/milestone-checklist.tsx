@@ -72,6 +72,14 @@ export function MilestoneChecklist({
     });
   }
 
+  if (optimistic.length === 0) {
+    return (
+      <p className="rounded-lg bg-surface px-4 py-6 text-center text-sm text-ink-muted">
+        {viewer === "rep" ? "No milestones yet. Refresh the plan or add them with the customer." : "Your plan is being put together. Check back soon."}
+      </p>
+    );
+  }
+
   return (
     <div>
       {error && (

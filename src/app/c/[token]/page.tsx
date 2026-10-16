@@ -71,6 +71,9 @@ async function CustomerHome({ params }: { params: PageProps<"/c/[token]">["param
 
         <Card>
           <h2 className="font-semibold">This week</h2>
+          {c.profile.thisWeek.length === 0 && (
+            <p className="mt-3 text-sm text-ink-faint">Nothing urgent this week. Nice work.</p>
+          )}
           <ul className="mt-3 space-y-3">
             {c.profile.thisWeek.map((item) => (
               <li key={item} className="flex gap-2.5 text-sm">
