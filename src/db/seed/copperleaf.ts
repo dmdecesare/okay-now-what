@@ -333,7 +333,41 @@ Dan`,
     },
   ],
 
+  learning: [
+    { name: "Ivy S.", role: "developer", challenges: ["install", "first_chat", "write_tests"], daysAgo: 1 },
+    { name: "Mia L.", role: "admin", challenges: ["setup_org", "policies"], daysAgo: 3 },
+    { name: "Chris T.", role: "security", challenges: ["data_handling", "exclusions"], daysAgo: 2 },
+    { name: "Dan O.", role: "team_lead", challenges: ["install", "drive_adoption"], daysAgo: 4 },
+    { name: "Ben A.", role: "developer", challenges: ["install", "first_chat"], daysAgo: 2 },
+    { name: "Nora H.", role: "developer", challenges: ["install"], daysAgo: 1 },
+  ],
   insights: {
+    call_brief: {
+      headline:
+        "Day 11 and on track: 190 of 550 seats active, with the CISO's exclusions and audit story as the next hurdle.",
+      whatChanged: [
+        "Seats were assigned to all 550 developers.",
+        "Active seats grew 13 points to 35%.",
+        "Three security and compliance questions came in through the portal.",
+        "Content exclusions for the credit model repos are due this week.",
+      ],
+      openQuestions: [
+        "Has the CISO approved the list of excluded repositories?",
+        "Who will own the audit story for state and CFPB exams?",
+        "When can the DevEx team run the train-the-trainer session?",
+      ],
+      risks: ["The CFO will review value at six months, so weekly use needs to climb steadily from here."],
+      opportunities: [
+        "Platform is already 64% active and can model the rollout for other teams.",
+        "Once trained, the three-person DevEx team can run enablement in waves.",
+      ],
+      talkTrack: [
+        { topic: "Quick progress check", say: "Congratulate Dan on assigning all 550 seats and getting 190 developers active in the first ten days." },
+        { topic: "Security and audit", say: "Walk through the content exclusions plan and offer the audit log and approval resources for the CISO." },
+        { topic: "Enablement waves", say: "Confirm the DevEx train-the-trainer date so the first wave can start on time." },
+      ],
+      asks: ["CISO sign-off on the exclusion list", "A date for the train-the-trainer session"],
+    },
     next_best_action: {
       actions: [
         {

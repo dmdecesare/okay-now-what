@@ -9,7 +9,19 @@ import { RATE_LIMITS, type AiFeature } from "./ai/config";
 
 const GROUPS = {
   ask: { features: ["ask"] as AiFeature[], limit: () => RATE_LIMITS.askPerHour },
-  rep: { features: ["nextBestAction", "riskPlay", "questionThemes", "tools"] as AiFeature[], limit: () => RATE_LIMITS.repPerHour },
+  rep: {
+    features: [
+      "nextBestAction",
+      "riskPlay",
+      "questionThemes",
+      "tools",
+      "repChat",
+      "callBrief",
+      "expansionPitch",
+      "businessReview",
+    ] as AiFeature[],
+    limit: () => RATE_LIMITS.repPerHour,
+  },
   build: { features: ["buildAccount"] as AiFeature[], limit: () => RATE_LIMITS.buildPerHour },
 };
 

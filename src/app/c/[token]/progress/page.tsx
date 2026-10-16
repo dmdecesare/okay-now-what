@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { LineChart } from "lucide-react";
+import { PortalHeader } from "@/components/customer/portal-header";
 import { Card, EmptyState } from "@/components/ui/card";
 import { Stat } from "@/components/ui/metrics";
 import { TabSkeleton } from "@/components/account/tab-skeleton";
@@ -23,6 +25,11 @@ async function Progress({ params }: { params: PageProps<"/c/[token]/progress">["
 
   return (
     <div className="space-y-6">
+      <PortalHeader
+        icon={<LineChart />}
+        title="Progress"
+        description="How Copilot use is growing across your teams. A good place to spot your next champions."
+      />
       {c.profile.successCriteria.length > 0 && (
         <Card>
           <h2 className="font-semibold">Pilot success criteria</h2>

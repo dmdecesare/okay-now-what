@@ -11,6 +11,10 @@ import { baselineSnapshot, biggestDrop, pct, sortSnapshots, teamPeaks, teamTrend
 import { daysBetween } from "@/lib/dates";
 import { formatDate, formatNumber } from "@/lib/format";
 import { cn } from "@/lib/cn";
+import { getLearningForAccount } from "@/db/queries";
+import { ROLE_LABELS } from "@/lib/learning";
+import { CardBody, CardHeader } from "@/components/ui/card";
+import { GraduationCap } from "lucide-react";
 import { loadAccount } from "../load";
 
 export default function AdoptionPage({ params }: PageProps<"/accounts/[slug]/adoption">) {
@@ -23,6 +27,7 @@ export default function AdoptionPage({ params }: PageProps<"/accounts/[slug]/ado
 
 async function Adoption({ params }: { params: PageProps<"/accounts/[slug]/adoption">["params"] }) {
   const { account, usage, insights } = await loadAccount(params);
+  const learning = await getLearningForAccount(account.id);
   if (usage.length === 0) return <NoUsageNote title="No usage data yet" />;
 
   const sorted = sortSnapshots(usage);
@@ -82,6 +87,35 @@ async function Adoption({ params }: { params: PageProps<"/accounts/[slug]/adopti
           </ol>
         )}
       </InsightCard>
+
+      <Card className="p-0">
+        <CardHeader
+          icon={<GraduationCap className="size-4" />}
+          title="Learning paths"
+          description="Hands-on challenges developers complete in their success portal."
+        />
+        <CardBody className="grid gap-6 sm:grid-cols-3">
+          <Stat label="Learners" value={formatNumber(learning.learners)} sub={`${pct(learning.learners, account.seats)}% of seats`} />
+          <Stat label="Challenges done" value={formatNumber(learning.completions)} />
+          <div>
+            <p className="text-micro font-medium uppercase text-ink-faint">Most active</p>
+            {learning.leaders.length === 0 ? (
+              <p className="mt-2 text-sm text-ink-muted">No one has started yet. Share the Learn tab in the launch email.</p>
+            ) : (
+              <ul className="mt-2 space-y-1 text-sm">
+                {learning.leaders.slice(0, 3).map((l) => (
+                  <li key={l.name} className="flex justify-between gap-3">
+                    <span className="truncate">
+                      {l.name} <span className="text-ink-faint">· {ROLE_LABELS[l.role].label}</span>
+                    </span>
+                    <span className="font-semibold tabular-nums">{l.done}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </CardBody>
+      </Card>
 
       <Card>
         <h2 className="font-semibold">Seats active over time</h2>

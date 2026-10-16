@@ -1,13 +1,16 @@
 import { randomBytes } from "node:crypto";
 import { count } from "drizzle-orm";
-import { accountProfileSchema, insightSchemas, type InsightKind } from "@/lib/schemas";
+import { accountProfileSchema, businessReviewSchema, insightSchemas, type InsightKind } from "@/lib/schemas";
+import { nameKey } from "@/lib/learning";
 import { addDays, monthStart, todayISO } from "@/lib/dates";
 import type { DB } from "../client";
 import {
   accountProfiles,
   accounts,
   aiInsights,
+  businessReviews,
   customerQuestions,
+  learningCompletions,
   generatedMaterials,
   milestones,
   spendMonths,
@@ -37,6 +40,8 @@ export async function seedIfEmpty(db: DB): Promise<boolean> {
 /** Deletes everything and reloads the three demo accounts. */
 export async function resetAndSeed(db: DB): Promise<void> {
   // Children first, then accounts. (No transaction: Neon's HTTP driver does not support them.)
+  await db.delete(learningCompletions);
+  await db.delete(businessReviews);
   await db.delete(aiInsights);
   await db.delete(generatedMaterials);
   await db.delete(customerQuestions);
@@ -120,6 +125,33 @@ async function insertSeed(db: DB, now: Date = new Date()): Promise<void> {
       generatedAt: now,
     }));
     if (insightRows.length > 0) await db.insert(aiInsights).values(insightRows);
+
+    if (s.learning?.length) {
+      await db.insert(learningCompletions).values(
+        s.learning.flatMap((l, li) =>
+          l.challenges.map((challengeId, ci) => ({
+            accountId,
+            displayName: l.name,
+            nameKey: nameKey(l.name),
+            role: l.role,
+            challengeId,
+            source: "seed" as const,
+            completedAt: new Date(now.getTime() - (l.daysAgo + l.challenges.length - ci) * DAY_MS - li * 41 * 60 * 1000),
+          })),
+        ),
+      );
+    }
+
+    if (s.review) {
+      await db.insert(businessReviews).values({
+        accountId,
+        content: businessReviewSchema.parse(s.review.content),
+        status: s.review.status,
+        source: "seed",
+        generatedAt: now,
+        publishedAt: s.review.status === "published" ? now : null,
+      });
+    }
 
     if (s.questions.length > 0) {
       await db.insert(customerQuestions).values(

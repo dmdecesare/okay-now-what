@@ -9,10 +9,14 @@ import { generateStructured, generateText, systemBlocks } from "./client";
 import type { AiFeature } from "./config";
 import { cleanStrings, noEmDash } from "./format";
 import {
+  CALL_BRIEF_SYSTEM,
+  EXPANSION_PITCH_SYSTEM,
   NEXT_BEST_ACTION_SYSTEM,
   QUESTION_THEMES_SYSTEM,
   RISK_PLAY_SYSTEM,
   TOOLS_SYSTEM,
+  callBriefInput,
+  expansionPitchInput,
   nextBestActionInput,
   questionThemesInput,
   riskPlayInput,
@@ -26,7 +30,14 @@ const INSIGHT_SETUP: Record<InsightKind, { feature: AiFeature; system: string; i
   next_best_action: { feature: "nextBestAction", system: NEXT_BEST_ACTION_SYSTEM, input: nextBestActionInput },
   risk_play: { feature: "riskPlay", system: RISK_PLAY_SYSTEM, input: riskPlayInput },
   question_themes: { feature: "questionThemes", system: QUESTION_THEMES_SYSTEM, input: questionThemesInput },
+  call_brief: { feature: "callBrief", system: CALL_BRIEF_SYSTEM, input: callBriefInput },
+  expansion_pitch: { feature: "expansionPitch", system: EXPANSION_PITCH_SYSTEM, input: expansionPitchInput },
 };
+
+/** Which AI feature (for logging and rate limits) writes each kind of insight. */
+export function insightFeature(kind: InsightKind): AiFeature {
+  return INSIGHT_SETUP[kind].feature;
+}
 
 export async function regenerateInsight(slug: string, kind: InsightKind, ipHash: string): Promise<void> {
   const detail = await getAccountDetail(slug);
@@ -34,7 +45,7 @@ export async function regenerateInsight(slug: string, kind: InsightKind, ipHash:
   const setup = INSIGHT_SETUP[kind];
 
   try {
-    // The three insight schemas differ, so validate as unknown here and re-parse below.
+    // The insight schemas differ, so validate as unknown here and re-parse below.
     const schema = insightSchemas[kind] as z.ZodType<unknown>;
     const { data, usage } = await generateStructured(
       setup.feature,

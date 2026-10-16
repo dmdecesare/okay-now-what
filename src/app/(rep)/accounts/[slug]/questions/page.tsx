@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badges";
 import { TabSkeleton } from "@/components/account/tab-skeleton";
 import { InsightCard } from "@/components/account/insight-card";
 import { refreshInsightAction } from "@/app/actions/ai";
-import { AnswerText } from "@/components/customer/answer-text";
+import { AnswerText } from "@/components/chat/answer-text";
 import { DocLinkList } from "@/components/customer/doc-link-list";
 import { docLinks } from "@/lib/resources";
 import { daysBetween } from "@/lib/dates";

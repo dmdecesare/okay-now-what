@@ -1,6 +1,8 @@
 import type { DocKey } from "@/lib/resources";
+import type { ChallengeId, LearningRole } from "@/lib/learning";
 import type {
   AccountProfile,
+  BusinessReview,
   InsightContent,
   MilestoneStatus,
   QuestionTopic,
@@ -38,6 +40,10 @@ export type SeedAccount = {
   questions: { question: string; answer: string; topic: QuestionTopic; daysAgo: number; sources?: DocKey[] }[];
   /** Pre-written "Claude's take" so the demo loads instantly. Phase 5 replaces these live. */
   insights: Partial<InsightContent>;
+  /** Fictional learners on the customer's learning paths. */
+  learning?: { name: string; role: LearningRole; challenges: ChallengeId[]; daysAgo: number }[];
+  /** A business review, written from customer-visible data only (it's shown on the portal). */
+  review?: { content: BusinessReview; status: "draft" | "published" };
 };
 
 /** Builds per-team usage rows from team definitions and active counts in the same order. */

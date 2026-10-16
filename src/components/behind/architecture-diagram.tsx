@@ -33,8 +33,8 @@ export function ArchitectureDiagram() {
       <div className="grid gap-2 lg:grid-cols-[1fr_auto_1.3fr_auto_1fr] lg:items-center">
         <div className="space-y-2">
           <p className="text-xs font-medium uppercase tracking-wide text-ink-faint">Browser</p>
-          <Box title="Rep view" items={["Book of business", "Account tabs and tools", "Add account"]} />
-          <Box title="Customer view" items={["Private link per account", "Plan, guides, videos", "Ask assistant"]} />
+          <Box title="Rep view" items={["Book of business", "Account tabs, briefs, tools", "Rep assistant"]} />
+          <Box title="Customer view" items={["Private success portal", "Plan, learning paths, review", "Ask assistant"]} />
         </div>
 
         <Arrow label="HTTPS" />
@@ -46,9 +46,10 @@ export function ArchitectureDiagram() {
             title="Next.js server routes"
             items={[
               "Pages render on the server",
-              "/api/ask streams answers",
+              "/api/ask streams customer answers",
+              "/api/rep-chat streams rep answers",
               "/api/accounts builds accounts",
-              "Server actions: check-offs, refreshes, drafts",
+              "Server actions: check-offs, briefs, reviews, drafts",
               "Rate limits and input checks",
             ]}
           />
@@ -66,7 +67,7 @@ export function ArchitectureDiagram() {
         <div className="space-y-2">
           <p className="text-xs font-medium uppercase tracking-wide text-ink-faint">Services</p>
           <Box title="Anthropic API" items={["Claude Sonnet 5.5", "Structured outputs, validated", "Prompt caching"]} />
-          <Box title="Neon Postgres" items={["Accounts, plans, usage, spend", "Questions and AI drafts", "Call log for rate limits"]} />
+          <Box title="Neon Postgres" items={["Accounts, plans, usage, spend", "Questions, reviews, learning", "Call log for rate limits"]} />
         </div>
       </div>
     </figure>

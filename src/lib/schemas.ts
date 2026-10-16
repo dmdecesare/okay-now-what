@@ -158,20 +158,75 @@ export const questionThemesSchema = z.object({
 });
 export type QuestionThemes = z.infer<typeof questionThemesSchema>;
 
-export const INSIGHT_KINDS = ["risk_play", "next_best_action", "question_themes"] as const;
+export const callBriefSchema = z.object({
+  headline: z.string().describe("One sentence: the state of the account going into the call"),
+  whatChanged: z.array(z.string()).min(1).max(5),
+  openQuestions: z.array(z.string()).max(4),
+  risks: z.array(z.string()).max(3),
+  opportunities: z.array(z.string()).max(3),
+  talkTrack: z
+    .array(z.object({ topic: z.string(), say: z.string() }))
+    .min(3)
+    .max(5),
+  asks: z.array(z.string()).max(3),
+});
+export type CallBrief = z.infer<typeof callBriefSchema>;
+
+export const expansionPitchSchema = z.object({
+  headline: z.string().describe("One line for the home panel"),
+  why: z.string().describe("Two or three sentences on why now"),
+  proposal: z.string().describe("What to propose, in seats or teams from the data, with no prices"),
+  talkingPoints: z.array(z.string()).min(2).max(4),
+  nextStep: z.string(),
+});
+export type ExpansionPitch = z.infer<typeof expansionPitchSchema>;
+
+export const INSIGHT_KINDS = ["risk_play", "next_best_action", "question_themes", "call_brief", "expansion_pitch"] as const;
 export type InsightKind = (typeof INSIGHT_KINDS)[number];
 
 export type InsightContent = {
   risk_play: RiskPlay;
   next_best_action: NextBestAction;
   question_themes: QuestionThemes;
+  call_brief: CallBrief;
+  expansion_pitch: ExpansionPitch;
 };
 
 export const insightSchemas = {
   risk_play: riskPlaySchema,
   next_best_action: nextBestActionSchema,
   question_themes: questionThemesSchema,
+  call_brief: callBriefSchema,
+  expansion_pitch: expansionPitchSchema,
 } as const;
+
+// The customer-facing business review. Everything in it is shown to the customer's executives.
+export const businessReviewSchema = z.object({
+  title: z.string(),
+  period: z.string().describe("For example: First 75 days"),
+  executiveSummary: z.string().describe("Three or four sentences for an executive"),
+  goals: z
+    .array(
+      z.object({
+        goal: z.string(),
+        status: z.enum(["achieved", "on_track", "in_progress", "not_started"]),
+        evidence: z.string(),
+      }),
+    )
+    .min(1)
+    .max(5),
+  adoptionHighlights: z.array(z.string()).max(4),
+  wins: z
+    .array(z.object({ title: z.string(), detail: z.string() }))
+    .min(1)
+    .max(4),
+  nextQuarter: z
+    .array(z.object({ title: z.string(), detail: z.string(), owner: z.string(), timing: z.string() }))
+    .min(1)
+    .max(5),
+  asks: z.array(z.string()).max(3),
+});
+export type BusinessReview = z.infer<typeof businessReviewSchema>;
 
 export const MATERIAL_KINDS = [
   "launch_email",

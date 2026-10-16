@@ -126,3 +126,20 @@ A few lines per session. This feeds pages 5 and 6 of the PDF.
 **What broke and how we fixed it:** The GitHub CLI wasn't installed. Claude downloaded the official release, verified its checksum, and installed it in my home folder. I signed in with a one-time code.
 **Secrets check:** `npm run check:secrets` scanned every file and every commit for keys, tokens, database passwords, my personal email, and private files. It came back clean, and Claude proved it works by planting a fake key in a throwaway copy, which it caught.
 **Screenshot to capture for the PDF:** The Behind the build page (architecture and "Where Claude runs live"); the GitHub repo page.
+
+## Session 10: v2, from onboarding app to customer success platform (2026-10-16)
+
+**Date and time spent:**
+**What I asked Claude Code to do:** Make it look like a real corporate product instead of a simple AI-built tool, and tell the story of the customer's whole journey, not just onboarding. Specifically: a floating Ask on every customer page, an AI chat for the rep across the book, made-up logos for the accounts, and Claude's ideas for what else to add. I picked four: a one-click business review, developer learning paths, expansion signals, and a "Brief me" call brief.
+**What worked on the first try:**
+- The new design system and logos, then a dark sidebar, a branded home with charts, an activity feed, and account profile pages.
+- The rep assistant answered "which accounts need me this week?" with the right three accounts in order and linked straight to Bluestone's plan tab.
+- The business review is built only from what the customer can already see, so the leak check passed on Claude's freshly written Copperleaf review without any changes.
+**What broke and how we fixed it:**
+- I said the first redesign still looked basic. Claude added a branded hero with a plain-English summary of the week, seat utilization and portfolio health charts, a customer activity feed, and a "Coming up" timeline.
+- The rep chat failed at first because a dev server started by an earlier session was serving stale code. I approved a restart; Claude then fixed the launch config so Turbopack could find Node and cleared its cache.
+- Claude caught that rep previews of the customer Ask were saving questions as if the customer asked them, and made preview mode save nothing.
+- The first business review draft showed a raw date ("2026-10-09"). Claude formatted dates in the prompt input.
+**Anything that surprised me about Claude:**
+**Numbers:** 10 live AI features (up from 6). The leak check now covers 30 customer pages. One database migration, which only adds tables.
+**Screenshot to capture for the PDF:** The new home page; Bluestone's profile header; the customer portal home with the journey; the floating Ask; the rep assistant panel; a call brief; the Bluestone business review; learning paths.

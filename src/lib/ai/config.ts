@@ -27,6 +27,14 @@ export const AI_FEATURES = {
   riskPlay: { model: MODELS.sonnet, effort: "low", maxTokens: 4000, label: "Risk explanation and recovery play" },
   questionThemes: { model: MODELS.sonnet, effort: "low", maxTokens: 4000, label: "Question themes" },
   tools: { model: MODELS.sonnet, effort: "medium", maxTokens: 8000, label: "Rep tools" },
+  /** The rep's chat across the whole book. Low effort keeps answers fast. */
+  repChat: { model: MODELS.sonnet, effort: "low", maxTokens: 4000, label: "Rep assistant" },
+  /** One-page brief before a customer call. */
+  callBrief: { model: MODELS.sonnet, effort: "low", maxTokens: 6000, label: "Call brief" },
+  /** The expansion pitch when growth signals fire. */
+  expansionPitch: { model: MODELS.sonnet, effort: "low", maxTokens: 4000, label: "Expansion play" },
+  /** The customer-facing business review. */
+  businessReview: { model: MODELS.sonnet, effort: "medium", maxTokens: 8000, label: "Business review" },
 } as const satisfies Record<string, FeatureConfig>;
 
 export type AiFeature = keyof typeof AI_FEATURES;

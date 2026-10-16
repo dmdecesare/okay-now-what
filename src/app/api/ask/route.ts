@@ -15,8 +15,12 @@ import { QUESTION_TOPICS, type QuestionTopic } from "@/lib/schemas";
 // POST /api/ask: the customer's Ask assistant. Authorized by the private link token.
 // Streams the answer as plain text. If Claude can't answer, the stream ends with
 // ASK_ERROR_MARKER plus a friendly message, and the question is still saved for the rep.
+// In rep preview mode (preview: true) nothing is saved or tagged: the rep's own test questions
+// shouldn't show up as the customer's. The flag can only reduce side effects, never add any.
 
 export const maxDuration = 60;
+
+const TRY_AGAIN = "I couldn't answer that right now. Please try again in a moment.";
 
 const SAVED_ANYWAY =
   "I couldn't answer that right now, but your question was saved and your account team will follow up.";
@@ -28,6 +32,7 @@ const bodySchema = z.object({
     .array(z.object({ q: z.string().max(1000), a: z.string().max(4000) }))
     .max(4)
     .default([]),
+  preview: z.boolean().default(false),
 });
 
 const topicSchema = z.object({ topic: z.enum(QUESTION_TOPICS) });
@@ -35,7 +40,7 @@ const topicSchema = z.object({ topic: z.enum(QUESTION_TOPICS) });
 export async function POST(req: Request) {
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "Please type a question first." }, { status: 400 });
-  const { token, question, history } = parsed.data;
+  const { token, question, history, preview } = parsed.data;
 
   const ctx = await getAskContext(token);
   if (!ctx) return Response.json({ error: "This onboarding link isn't valid." }, { status: 404 });
@@ -47,17 +52,14 @@ export async function POST(req: Request) {
   }
 
   // Tag the topic alongside the answer. Falls back to keywords if AI is unavailable.
-  const topicPromise: Promise<QuestionTopic> = generateStructured(
-    "classifyQuestion",
-    topicSchema,
-    systemBlocks(CLASSIFY_SYSTEM),
-    question,
-  )
-    .then(async ({ data, usage }) => {
-      await recordCall("classifyQuestion", ipHash, "ok", usage);
-      return data.topic;
-    })
-    .catch(() => guessTopic(question));
+  const topicPromise: Promise<QuestionTopic> = preview
+    ? Promise.resolve(guessTopic(question))
+    : generateStructured("classifyQuestion", topicSchema, systemBlocks(CLASSIFY_SYSTEM), question)
+        .then(async ({ data, usage }) => {
+          await recordCall("classifyQuestion", ipHash, "ok", usage);
+          return data.topic;
+        })
+        .catch(() => guessTopic(question));
 
   const messages = [
     ...history.flatMap((h) => [
@@ -80,7 +82,12 @@ export async function POST(req: Request) {
       } catch (err) {
         const refused = err instanceof AiError && err.reason === "refused";
         await recordCall("ask", ipHash, refused ? "refused" : "error");
-        controller.enqueue(encoder.encode(`${ASK_ERROR_MARKER}${SAVED_ANYWAY}`));
+        controller.enqueue(encoder.encode(`${ASK_ERROR_MARKER}${preview ? TRY_AGAIN : SAVED_ANYWAY}`));
+      }
+
+      if (preview) {
+        controller.close();
+        return;
       }
 
       // Save every question so the rep sees it, answered or not.
@@ -102,13 +109,15 @@ export async function POST(req: Request) {
   });
 
   // Once the answer is out, refresh the rep's question themes in the background.
-  after(async () => {
-    try {
-      await regenerateInsight(ctx.slug, "question_themes", hashIp("background"));
-    } catch {
-      // The previous summary stays in place.
-    }
-  });
+  if (!preview) {
+    after(async () => {
+      try {
+        await regenerateInsight(ctx.slug, "question_themes", hashIp("background"));
+      } catch {
+        // The previous summary stays in place.
+      }
+    });
+  }
 
   return new Response(stream, {
     headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },

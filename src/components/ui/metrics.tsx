@@ -28,11 +28,13 @@ export function ProgressBar({
   label,
   showValue = true,
   className,
+  tone = "accent",
 }: {
   value: number;
   label?: string;
   showValue?: boolean;
   className?: string;
+  tone?: "accent" | "risk" | "growth";
 }) {
   const pct = Math.max(0, Math.min(100, Math.round(value)));
   return (
@@ -44,14 +46,20 @@ export function ProgressBar({
         </div>
       )}
       <div
-        className="h-2 overflow-hidden rounded-full bg-surface-strong"
+        className="h-1.5 overflow-hidden rounded-full bg-surface-strong"
         role="progressbar"
         aria-valuenow={pct}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-label={label}
       >
-        <div className="h-full rounded-full bg-accent transition-[width]" style={{ width: `${pct}%` }} />
+        <div
+          className={cn(
+            "h-full rounded-full transition-[width]",
+            tone === "risk" ? "bg-risk" : tone === "growth" ? "bg-growth" : "bg-chart-1",
+          )}
+          style={{ width: `${pct}%` }}
+        />
       </div>
     </div>
   );
@@ -70,12 +78,62 @@ export function Stat({
 }) {
   return (
     <div>
-      <p className="text-xs font-medium uppercase tracking-wide text-ink-faint">{label}</p>
-      <p className="mt-1 flex items-center gap-1.5 text-2xl font-semibold tabular-nums">
+      <p className="text-micro font-medium uppercase text-ink-faint">{label}</p>
+      <p className="mt-1 flex items-center gap-1.5 text-kpi font-semibold tabular-nums">
         {value}
         {trend && <TrendArrow trend={trend} />}
       </p>
       {sub && <p className="mt-0.5 text-sm text-ink-muted">{sub}</p>}
+    </div>
+  );
+}
+
+/** A KPI card: label, big number, a change chip, and an optional sparkline. */
+export function KpiTile({
+  label,
+  value,
+  change,
+  sub,
+  chart,
+  icon,
+  className,
+}: {
+  label: string;
+  value: React.ReactNode;
+  /** Short change text with its direction, for example { text: "+6 pts", tone: "up" }. */
+  change?: { text: string; tone: "up" | "down" | "neutral" };
+  sub?: React.ReactNode;
+  chart?: React.ReactNode;
+  icon?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex flex-col rounded-xl border border-border bg-bg p-4 shadow-card", className)}>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-medium text-ink-muted">{label}</p>
+        {icon && <span className="text-ink-faint [&_svg]:size-4">{icon}</span>}
+      </div>
+      <div className="mt-2 flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-kpi font-semibold tabular-nums">{value}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
+            {change && (
+              <span
+                className={cn(
+                  "inline-flex items-center rounded px-1 py-px font-medium tabular-nums",
+                  change.tone === "up" && "bg-ok-soft text-ok",
+                  change.tone === "down" && "bg-risk-soft text-risk",
+                  change.tone === "neutral" && "bg-surface-strong text-ink-muted",
+                )}
+              >
+                {change.text}
+              </span>
+            )}
+            {sub && <span className="text-ink-faint">{sub}</span>}
+          </div>
+        </div>
+        {chart && <div className="shrink-0">{chart}</div>}
+      </div>
     </div>
   );
 }

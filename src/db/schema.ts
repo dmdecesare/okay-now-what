@@ -140,6 +140,46 @@ export const aiInsights = pgTable(
   (t) => [uniqueIndex("insights_account_kind_idx").on(t.accountId, t.kind)],
 );
 
+/**
+ * The customer-facing business review for an account. Built only from customer-safe data, so it can be
+ * shown on the customer's success portal once the rep publishes it. One per account.
+ */
+export const businessReviews = pgTable("business_reviews", {
+  accountId: uuid("account_id")
+    .primaryKey()
+    .references(() => accounts.id, { onDelete: "cascade" }),
+  /** Validated against businessReviewSchema before it is saved. */
+  content: jsonb("content").notNull(),
+  status: text("status").$type<"draft" | "published">().notNull().default("draft"),
+  source: text("source").$type<"seed" | "live">().notNull(),
+  generatedAt: timestamp("generated_at", { withTimezone: true }).notNull().defaultNow(),
+  publishedAt: timestamp("published_at", { withTimezone: true }),
+});
+
+/**
+ * Developer learning path progress. There is no login, so learners are identified by the display
+ * name they type (normalized into nameKey) within one account.
+ */
+export const learningCompletions = pgTable(
+  "learning_completions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    accountId: uuid("account_id")
+      .notNull()
+      .references(() => accounts.id, { onDelete: "cascade" }),
+    displayName: text("display_name").notNull(),
+    nameKey: text("name_key").notNull(),
+    role: text("role").notNull(),
+    challengeId: text("challenge_id").notNull(),
+    source: text("source").$type<"seed" | "live">().notNull().default("live"),
+    completedAt: timestamp("completed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("learning_unique_idx").on(t.accountId, t.nameKey, t.challengeId),
+    index("learning_account_idx").on(t.accountId),
+  ],
+);
+
 /** One row per live AI call. Powers rate limiting and the "by the numbers" stats. */
 export const aiCalls = pgTable(
   "ai_calls",

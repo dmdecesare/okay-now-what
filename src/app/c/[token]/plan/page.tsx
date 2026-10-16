@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { ListChecks } from "lucide-react";
+import { PortalHeader } from "@/components/customer/portal-header";
 import { Card } from "@/components/ui/card";
 import { ProgressBar, Stat } from "@/components/ui/metrics";
 import { TabSkeleton } from "@/components/account/tab-skeleton";
@@ -23,6 +25,11 @@ async function CustomerPlan({ params }: { params: PageProps<"/c/[token]/plan">["
 
   return (
     <div className="space-y-6">
+      <PortalHeader
+        icon={<ListChecks />}
+        title="Your plan"
+        description="The milestones that get your team from setup to real results. Check them off as you go: your account team sees updates right away."
+      />
       <Card className="grid grid-cols-2 gap-5 sm:grid-cols-3">
         <Stat label="Done" value={`${done} of ${c.milestones.length}`} />
         {daysLeft != null ? (

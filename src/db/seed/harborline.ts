@@ -345,7 +345,60 @@ Priya`,
 
   questions: [],
 
+  learning: [
+    { name: "Maya R.", role: "developer", challenges: ["install", "first_chat", "write_tests", "refactor", "custom_instructions", "agent_task"], daysAgo: 1 },
+    { name: "Priya N.", role: "team_lead", challenges: ["install", "first_chat", "code_review", "drive_adoption", "view_usage"], daysAgo: 2 },
+    { name: "Tom B.", role: "developer", challenges: ["install", "first_chat", "write_tests", "code_review"], daysAgo: 3 },
+    { name: "Luis G.", role: "team_lead", challenges: ["install", "first_chat", "drive_adoption", "view_usage"], daysAgo: 4 },
+    { name: "Raj K.", role: "admin", challenges: ["setup_org", "policies", "budgets"], daysAgo: 6 },
+    { name: "Ana P.", role: "developer", challenges: ["install", "first_chat", "agent_task"], daysAgo: 2 },
+    { name: "Sam O.", role: "security", challenges: ["data_handling", "public_code"], daysAgo: 5 },
+    { name: "Ken W.", role: "developer", challenges: ["install", "first_chat"], daysAgo: 7 },
+    { name: "Dee F.", role: "developer", challenges: ["install"], daysAgo: 3 },
+  ],
   insights: {
+    call_brief: {
+      headline:
+        "The pilot is beating its usage and satisfaction targets at day 24. AppSec sign-off and the mobile team are the two things left to close.",
+      whatChanged: [
+        "Weekly active use climbed from 61% to 82% over the last two check-ins.",
+        "Mobile is up from 6 to 12 of 20 active, still the lowest team at 60%.",
+        "The mid-pilot survey came back at 4.2 out of 5, above the 4.0 target.",
+        "Additional usage rose from $180 to $410 a month as teams try Chat and agent mode.",
+      ],
+      openQuestions: [
+        "When does AppSec expect to finish the data handling review?",
+        "Does the CTO want PR cycle time measured on all four teams or the strongest two?",
+        "Who on the mobile team could become a second champion?",
+      ],
+      risks: [
+        "AppSec sign-off is still in progress, and it gates the CTO decision.",
+        "PR cycle time is 14% faster so far against a 20% target.",
+      ],
+      opportunities: [
+        "Checkout is 90% active, a strong first wave for the 600-seat rollout.",
+        "Weekly use and satisfaction already beat target, so the readout can start now.",
+      ],
+      talkTrack: [
+        { topic: "Wins so far", say: "Open with the numbers: 82% weekly active against a 70% target, and 4.2 out of 5 satisfaction." },
+        { topic: "AppSec sign-off", say: "Ask Priya what AppSec still needs on data retention, and offer to join a 30-minute review this week." },
+        { topic: "Mobile team", say: "Confirm the Chat and agent mode session for day 28 and suggest running it on the team's own code." },
+        { topic: "Readout plan", say: "Propose drafting the CTO readout now and adding the final PR cycle time number at day 55." },
+      ],
+      asks: ["A target date for AppSec sign-off", "30 minutes with the CTO in the last week of the pilot"],
+    },
+    expansion_pitch: {
+      headline: "Strong pilot: line up the 600-seat rollout for the CTO decision",
+      why: "Weekly active use is 82% against a 70% target, satisfaction is 4.2 out of 5, and additional usage more than doubled in two months. The CTO wants hard numbers before buying 600 seats, and most of them are already in.",
+      proposal:
+        "Move from the 100-seat pilot to the 600 developers in scope, starting with Checkout and Risk, the two strongest teams, ahead of Q1 budget lock.",
+      talkingPoints: [
+        "Checkout is 27 of 30 active (90%), proof the rollout can start there.",
+        "Two of four success criteria are already met, and the other two are on track.",
+        "Additional usage grew from $180 to $410 a month, a sign developers are using Chat and agent mode, not just completions.",
+      ],
+      nextStep: "Ask Priya for 30 minutes this week to plan the readout and the rollout waves for the CTO.",
+    },
     next_best_action: {
       actions: [
         {

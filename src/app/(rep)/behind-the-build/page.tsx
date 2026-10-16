@@ -10,6 +10,10 @@ import { formatNumber } from "@/lib/format";
 import {
   ASK_SYSTEM,
   BUILD_KIT_SYSTEM,
+  BUSINESS_REVIEW_SYSTEM,
+  CALL_BRIEF_SYSTEM,
+  EXPANSION_PITCH_SYSTEM,
+  REP_CHAT_SYSTEM,
   BUILD_PLAN_SYSTEM,
   CLASSIFY_SYSTEM,
   NEXT_BEST_ACTION_SYSTEM,
@@ -68,6 +72,30 @@ const LIVE_AI: { feature: string; input: string; output: string; prompts: { labe
     output: "Editable draft: launch email, agenda, FAQ, check-in, pilot readout, value summary",
     prompts: [{ label: "Tools", text: TOOLS_SYSTEM }],
   },
+  {
+    feature: "Rep assistant",
+    input: "The whole book, plus the account the rep has open",
+    output: "Streamed answer with links to the right account tabs",
+    prompts: [{ label: "Rep assistant", text: REP_CHAT_SYSTEM }],
+  },
+  {
+    feature: "Call brief",
+    input: "Account context plus what changed in the last 14 days",
+    output: "One-page brief: what changed, talk track, questions, asks",
+    prompts: [{ label: "Call brief", text: CALL_BRIEF_SYSTEM }],
+  },
+  {
+    feature: "Expansion play",
+    input: "Growth signals plus account context",
+    output: "Why now, what to propose, talking points, next step",
+    prompts: [{ label: "Expansion play", text: EXPANSION_PITCH_SYSTEM }],
+  },
+  {
+    feature: "Business review",
+    input: "Only what the customer can already see, plus learning progress",
+    output: "Executive review the rep publishes to the customer's portal",
+    prompts: [{ label: "Business review", text: BUSINESS_REVIEW_SYSTEM }],
+  },
 ];
 
 const STACK = [
@@ -85,14 +113,19 @@ export default function BehindTheBuildPage() {
 
   return (
     <div className="space-y-12">
-      <header className="max-w-3xl">
-        <p className="text-sm font-medium text-accent-ink">Behind the build</p>
-        <h1 className="mt-1 text-display font-semibold">How this was made</h1>
-        <p className="mt-3 text-ink-muted">
+      <header className="relative isolate max-w-none overflow-hidden rounded-2xl bg-[#0b1a17] px-6 py-8 text-white shadow-panel sm:px-8">
+        <div
+          className="absolute inset-0 -z-10 bg-[radial-gradient(60%_90%_at_0%_0%,rgb(20_184_166/0.35),transparent_60%),radial-gradient(50%_80%_at_100%_100%,rgb(29_78_216/0.35),transparent_60%)]"
+          aria-hidden
+        />
+        <p className="text-sm font-medium text-[#5eead4]">Behind the build</p>
+        <h1 className="mt-1 text-[2rem] font-semibold leading-tight tracking-tight">How this was made</h1>
+        <p className="mt-3 max-w-3xl text-white/75">
           GitHub&apos;s mid-market reps close the deal and then own onboarding, adoption, and renewal with no
           customer success team, across 40 accounts at different stages. Customers get generic docs and low adoption
           shows up only at renewal. Okay, Now What? gives the rep a toolkit that does the work of a CS team, and gives
-          every customer a private, self-serve onboarding app built from the rep&apos;s own deal notes.
+          every customer a private success portal for their whole journey: onboard, learn, adopt, prove value, and
+          grow. It&apos;s built from the rep&apos;s own deal notes, with Claude running live throughout.
         </p>
       </header>
 
@@ -100,10 +133,10 @@ export default function BehindTheBuildPage() {
         <SectionHeader title="By the numbers" description="From the git history and the app itself." />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           <Number label="Build time" value={`~${stats.activeHours} hrs`} sub={`estimated from commits, ${stats.calendarDays} days`} />
-          <Number label="Claude Code sessions" value="1" sub="one continuous session" />
+          <Number label="Claude Code sessions" value="2" sub="the first build, then the v2 redesign" />
           <Number label="Lines of code" value={formatNumber(stats.linesOfCode)} sub="written by Claude Code" />
           <Number label="Official resources" value={String(resources.length)} sub={`${resources.length - videos} docs, ${videos} videos, all verified`} />
-          <Number label="AI features live" value="6" sub="plus a question tagger" />
+          <Number label="AI features live" value={String(LIVE_AI.length)} sub="plus a question tagger" />
           <Suspense fallback={<Number label="Live Claude calls" value="..." sub="served so far" />}>
             <LiveCalls />
           </Suspense>
@@ -135,7 +168,7 @@ export default function BehindTheBuildPage() {
       <section>
         <SectionHeader
           title="Where Claude runs live"
-          description="Six features, each with its exact prompt. Open any one to read it."
+          description={`${LIVE_AI.length} features, each with its exact prompt. Open any one to read it.`}
         />
         <Card className="p-0">
           <ul className="divide-y divide-border">

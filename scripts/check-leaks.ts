@@ -5,9 +5,11 @@
 //   npm run check:leaks                         # local dev server
 //   npm run check:leaks -- https://your-app.vercel.app
 import { SEED_ACCOUNTS } from "@/db/seed";
+import { CUSTOMER_PAGES } from "@/lib/customer-routes";
 
 const BASE = (process.argv[2] ?? "http://localhost:3000").replace(/\/$/, "");
-const CUSTOMER_TABS = ["", "/plan", "/videos", "/guides", "/setup", "/kit", "/progress", "/ask"];
+
+const CUSTOMER_TABS = CUSTOMER_PAGES;
 
 /** Lowercase letters and digits only, so HTML escaping and JSON quoting can't hide a match. */
 const norm = (s: string) =>
@@ -68,7 +70,10 @@ async function main() {
     // Accounts built live aren't in the seed, so also treat this account's own deal
     // notes (shown on the rep Overview) as rep-only text.
     const repVisible = repPage.replace(/<script[\s\S]*?<\/script>/g, "");
-    const notes = repVisible.match(/<p class="whitespace-pre-wrap[^"]*"[^>]*>([\s\S]*?)<\/p>/)?.[1] ?? "";
+    const notes =
+      repVisible.match(/<p[^>]*data-deal-notes[^>]*>([\s\S]*?)<\/p>/)?.[1] ??
+      repVisible.match(/<p class="whitespace-pre-wrap[^"]*"[^>]*>([\s\S]*?)<\/p>/)?.[1] ??
+      "";
     if (!notes) throw new Error(`Couldn't find the deal notes for ${slug} on the rep page.`);
     const accountMarkers = notes
       .split(/[.\n]/)

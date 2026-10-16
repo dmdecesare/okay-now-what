@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { Megaphone } from "lucide-react";
+import { PortalHeader } from "@/components/customer/portal-header";
 import { Card } from "@/components/ui/card";
 import { DraftEditor } from "@/components/ui/draft-editor";
 import { TabSkeleton } from "@/components/account/tab-skeleton";
@@ -19,13 +21,11 @@ async function Kit({ params }: { params: PageProps<"/c/[token]/kit">["params"] }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-title font-semibold">Champion kit</h2>
-        <p className="mt-1 text-ink-muted">
-          Ready-to-use materials for rolling out Copilot at {c.name}. Edit anything, then copy it into email, Slack,
-          or your wiki.
-        </p>
-      </div>
+      <PortalHeader
+        icon={<Megaphone />}
+        title="Champion kit"
+        description={`Ready-to-use materials for rolling out Copilot at ${c.name}. Edit anything, then copy it into email, Slack, or your wiki.`}
+      />
 
       <Card>
         <h3 className="font-semibold">Launch announcement</h3>

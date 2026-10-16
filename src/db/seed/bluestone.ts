@@ -318,7 +318,131 @@ Elena`,
     },
   ],
 
+  learning: [
+    { name: "Omar Z.", role: "developer", challenges: ["install", "first_chat", "write_tests", "refactor", "custom_instructions", "agent_task", "code_review"], daysAgo: 9 },
+    { name: "Grace L.", role: "developer", challenges: ["install", "first_chat", "write_tests", "refactor", "code_review", "agent_task"], daysAgo: 12 },
+    { name: "Pete M.", role: "developer", challenges: ["install", "first_chat", "write_tests", "refactor", "code_review"], daysAgo: 15 },
+    { name: "Elena R.", role: "team_lead", challenges: ["install", "first_chat", "drive_adoption", "view_usage"], daysAgo: 30 },
+    { name: "Max D.", role: "admin", challenges: ["setup_org", "policies", "budgets", "reengage"], daysAgo: 20 },
+    { name: "Hana K.", role: "developer", challenges: ["install", "first_chat", "write_tests", "code_review"], daysAgo: 10 },
+    { name: "Jon V.", role: "developer", challenges: ["install", "first_chat", "refactor"], daysAgo: 14 },
+    { name: "Lia C.", role: "developer", challenges: ["install", "first_chat", "write_tests"], daysAgo: 18 },
+    { name: "Kim P.", role: "security", challenges: ["data_handling", "public_code"], daysAgo: 40 },
+    { name: "Rosa F.", role: "developer", challenges: ["install", "first_chat"], daysAgo: 25 },
+    { name: "Ted Y.", role: "developer", challenges: ["install"], daysAgo: 35 },
+    { name: "Al G.", role: "developer", challenges: ["install"], daysAgo: 28 },
+  ],
+  review: {
+    status: "published",
+    content: {
+      title: "Copilot at Bluestone Assurance: the first 75 days",
+      period: "First 75 days",
+      executiveSummary:
+        "Copilot is now part of daily work across most of Bluestone's engineering org, with 497 of 700 developers active. Policy admin and data and analytics have made it a weekly habit on nearly every seat, and the first monthly update reached the CIO on schedule. Claims platform adoption has dipped, so the next quarter focuses on a tailored plan for that team and its legacy Java modernization.",
+      goals: [
+        {
+          goal: "Modernize the legacy claims system",
+          status: "in_progress",
+          evidence: "A claims modernization pilot with agent mode is planned, and custom instructions for the claims repo are under way.",
+        },
+        {
+          goal: "Adoption across the whole engineering org",
+          status: "on_track",
+          evidence: "497 of 700 seats are active (71%), and two teams are above 90%.",
+        },
+        {
+          goal: "A monthly adoption update for the CIO",
+          status: "achieved",
+          evidence: "The first monthly update was delivered on schedule.",
+        },
+      ],
+      adoptionHighlights: [
+        "Policy admin: 138 of 150 developers active each week",
+        "Data and analytics: 102 of 110 developers active each week",
+        "Digital: 90 of 120 developers active each week",
+        "12 developers have started a learning path, with 42 challenges completed",
+      ],
+      wins: [
+        { title: "Every seat assigned in week one", detail: "All 700 seats went out by team, so adoption can be followed team by team." },
+        { title: "Security questions settled early", detail: "The public code filter and IP questions were resolved within the first two weeks." },
+        { title: "Two teams set the standard", detail: "Policy admin and data and analytics use Copilot weekly across nearly every seat, a model for the rest of the org." },
+      ],
+      nextQuarter: [
+        {
+          title: "Hands-on session for the claims team",
+          detail: "A working session on their own legacy Java, using Chat and repository instructions.",
+          owner: "Claims platform team lead",
+          timing: "Next two weeks",
+        },
+        {
+          title: "Repository instructions for every team",
+          detail: "Start with the claims repo, then roll the pattern out org-wide.",
+          owner: "Platform team",
+          timing: "This month",
+        },
+        {
+          title: "Claims modernization pilot with agent mode",
+          detail: "Small, tested refactors of legacy Java, measured against today's baseline.",
+          owner: "Elena Ruiz",
+          timing: "Within 45 days",
+        },
+        {
+          title: "Results review with leadership",
+          detail: "Progress against each goal, with the numbers from your portal.",
+          owner: "Your GitHub account team",
+          timing: "Next quarter",
+        },
+      ],
+      asks: [
+        "Help us find a Copilot advocate inside claims or platform engineering",
+        "Join the kickoff for the claims modernization pilot",
+        "Share the monthly update with the wider engineering leadership team",
+      ],
+    },
+  },
   insights: {
+    call_brief: {
+      headline:
+        "Two teams are thriving, but the claims team has fallen to 28% active and Elena has been quiet for 22 days.",
+      whatChanged: [
+        "Overall activity is down to 71% from an 84% peak.",
+        "Claims platform fell to 28% active, down from 75% at its peak.",
+        "The claims enablement session and the custom instructions rollout are both overdue.",
+        "The claims team asked for tips on Copilot suggestions for legacy Java.",
+      ],
+      openQuestions: [
+        "Is Elena still the right champion if she takes on the Q4 reorg?",
+        "Who on the claims team would co-host a session on their own legacy Java?",
+        "Has the custom instructions file for the claims repo been started?",
+      ],
+      risks: [
+        "The claims system is the main reason for the purchase, so low claims adoption weakens the renewal story.",
+        "Additional usage is down 18% over two months.",
+      ],
+      opportunities: [
+        "Policy admin (92%) and data and analytics (93%) are near full adoption and make strong proof points for the CIO.",
+        "A claims modernization pilot with agent mode is already on the plan.",
+      ],
+      talkTrack: [
+        { topic: "Lead with the wins", say: "Start with policy admin and data and analytics, both above 90% active, so the CIO update opens with good news." },
+        { topic: "Name the claims problem", say: "Share that claims dropped to 28% active and ask Elena what she is hearing from the team lead." },
+        { topic: "Fix the first impression", say: "Offer to ship custom instructions for the claims repo before rescheduling their session on legacy Java." },
+        { topic: "A second champion", say: "Ask who on the claims or platform team could help drive adoption while Elena is busy with the reorg." },
+      ],
+      asks: ["A new date for the claims enablement session", "A named second champion", "20 minutes with Elena before the next CIO update"],
+    },
+    expansion_pitch: {
+      headline: "Use the policy admin and data wins to steady the account first",
+      why: "Policy admin and data and analytics are both above 90% active, so the value is real where teams have leaned in. With claims down and renewal about nine months out, these wins are the proof point for the CIO, not an upsell yet.",
+      proposal:
+        "Hold seat expansion until the claims team recovers. Propose the claims modernization pilot with agent mode as the next step, using what worked for policy admin.",
+      talkingPoints: [
+        "Policy admin is 138 of 150 active (92%).",
+        "Data and analytics is 102 of 110 active (93%).",
+        "Once claims recovers, the same playbook extends to its 160 seats.",
+      ],
+      nextStep: "Ask Elena to lead her next CIO update with the policy admin and data team wins.",
+    },
     risk_play: {
       reason: "Claims team adoption collapsed, and Elena has been quiet for 22 days.",
       explanation:

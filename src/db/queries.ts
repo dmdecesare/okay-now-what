@@ -1,10 +1,14 @@
 import { cache } from "react";
 import { asc, count, desc, eq } from "drizzle-orm";
 import { assessHealth, activePct, type HealthStatus, type Signal } from "@/lib/health";
-import { stageDay } from "@/lib/dates";
+import { assessExpansion, type ExpansionLevel, type ExpansionSignal } from "@/lib/expansion";
+import { baselineSnapshot, sortSnapshots } from "@/lib/adoption";
+import { daysBetween, stageDay, todayISO } from "@/lib/dates";
 import {
+  businessReviewSchema,
   insightSchemas,
   type AccountProfile,
+  type BusinessReview,
   type InsightContent,
   type InsightKind,
   type MaterialKind,
@@ -12,13 +16,17 @@ import {
   type TeamUsage,
 } from "@/lib/schemas";
 import { toChecklist, type ChecklistMilestone } from "@/lib/milestones";
+import { seedLogoId, type SeedLogoId } from "@/lib/logos";
+import { summarizeLearning, type LearningSummary } from "@/lib/learning";
 import { getDb } from "./client";
 import {
   accountProfiles,
   accounts,
   aiCalls,
   aiInsights,
+  businessReviews,
   customerQuestions,
+  learningCompletions,
   generatedMaterials,
   milestones,
   spendMonths,
@@ -41,6 +49,8 @@ export type Insights = { [K in InsightKind]?: Insight<K> };
 
 export type Health = { status: HealthStatus; signals: Signal[] };
 
+export type Expansion = { level: ExpansionLevel; signals: ExpansionSignal[] };
+
 export type AccountSummary = {
   id: string;
   slug: string;
@@ -48,13 +58,26 @@ export type AccountSummary = {
   industry: string;
   stage: Stage;
   stageDay: number;
+  pilotLengthDays: number | null;
   seats: number;
   activeSeats: number | null;
   activePct: number | null;
+  /** Points of % active gained or lost over the last 30 days. */
+  activeChange: number | null;
+  /** % active at each usage snapshot, oldest first. */
+  adoptionSeries: number[];
   monthlySpend: number | null;
+  /** Total monthly spend, oldest first. */
+  spendSeries: number[];
   spendTrend: SpendTrend;
+  renewalInDays: number | null;
+  championName: string | null;
+  championLastVisitAt: Date | null;
+  overdueCount: number;
   health: Health;
+  expansion: Expansion;
   riskPlay?: Insight<"risk_play">;
+  expansionPitch?: Insight<"expansion_pitch">;
 };
 
 function groupBy<T, K>(rows: T[], key: (r: T) => K): Map<K, T[]> {
@@ -116,54 +139,6 @@ function healthFor(
   });
 }
 
-/** Every account with its latest usage, spend trend, and health. Rep side only. */
-export async function listAccountSummaries(now: Date = new Date()): Promise<AccountSummary[]> {
-  const db = await getDb();
-  const [accts, profiles, usage, spend, ms, qs, insights] = await Promise.all([
-    db.select().from(accounts).orderBy(asc(accounts.createdAt), asc(accounts.name)),
-    db.select().from(accountProfiles),
-    db.select().from(usageSnapshots).orderBy(asc(usageSnapshots.date)),
-    db.select().from(spendMonths).orderBy(asc(spendMonths.month)),
-    db.select().from(milestones),
-    db.select().from(customerQuestions),
-    db.select().from(aiInsights),
-  ]);
-
-  const profileBy = new Map(profiles.map((p) => [p.accountId, p.data]));
-  const usageBy = groupBy(usage, (u) => u.accountId);
-  const spendBy = groupBy(spend, (s) => s.accountId);
-  const msBy = groupBy(ms, (m) => m.accountId);
-  const qsBy = groupBy(qs, (q) => q.accountId);
-  const insightsBy = groupBy(insights, (i) => i.accountId);
-
-  return accts.map((a) => {
-    const u = usageBy.get(a.id) ?? [];
-    const s = spendBy.get(a.id) ?? [];
-    const latest = u.at(-1);
-    const lastMonth = s.at(-1);
-    return {
-      id: a.id,
-      slug: a.slug,
-      name: a.name,
-      industry: a.industry,
-      stage: a.stage,
-      stageDay: stageDay(a.stageStartDate, now),
-      seats: a.seats,
-      activeSeats: latest?.activeSeats ?? null,
-      activePct: latest ? activePct(latest.activeSeats, a.seats) : null,
-      monthlySpend: lastMonth ? lastMonth.seatSpend + lastMonth.usageSpend : null,
-      spendTrend: spendTrend(s),
-      health: healthFor(
-        a,
-        profileBy.get(a.id),
-        { usage: u, spend: s, milestones: msBy.get(a.id) ?? [], questions: qsBy.get(a.id) ?? [] },
-        now,
-      ),
-      riskPlay: toInsights(insightsBy.get(a.id) ?? []).risk_play,
-    };
-  });
-}
-
 export type AccountDetail = {
   account: Account;
   profile: AccountProfile;
@@ -175,6 +150,7 @@ export type AccountDetail = {
   questions: CustomerQuestion[];
   insights: Insights;
   health: Health;
+  expansion: Expansion;
   /** Saved tool drafts, by kind. */
   materials: Partial<Record<MaterialKind, { content: string; updatedAt: Date }>>;
 };
@@ -215,9 +191,120 @@ export const getAccountDetail = cache(async (slug: string): Promise<AccountDetai
     questions,
     insights: toInsights(insights),
     health: healthFor(row.account, row.profile, { usage, spend, milestones: ms, questions }, now),
+    expansion: expansionFor(row.account, row.profile, usage, spend),
     materials: Object.fromEntries(materials.map((m) => [m.kind, { content: m.content, updatedAt: m.updatedAt }])),
   };
 });
+
+function expansionFor(a: Account, profile: AccountProfile, usage: UsageSnapshot[], spend: SpendMonth[]): Expansion {
+  return assessExpansion({
+    stage: a.stage,
+    seats: a.seats,
+    usage,
+    spend,
+    successCriteria: profile.successCriteria,
+  });
+}
+
+/**
+ * Every account in full, loaded with one query per table and grouped in memory.
+ * Rep side only. Feeds the book of business, the sidebar, and the rep chat.
+ */
+async function loadBook(now: Date = new Date()): Promise<AccountDetail[]> {
+  const db = await getDb();
+  const [accts, profiles, usage, spend, ms, qs, insights, materials] = await Promise.all([
+    db.select().from(accounts).orderBy(asc(accounts.createdAt), asc(accounts.name)),
+    db.select().from(accountProfiles),
+    db.select().from(usageSnapshots).orderBy(asc(usageSnapshots.date)),
+    db.select().from(spendMonths).orderBy(asc(spendMonths.month)),
+    db.select().from(milestones).orderBy(asc(milestones.sortOrder)),
+    db.select().from(customerQuestions).orderBy(desc(customerQuestions.askedAt)),
+    db.select().from(aiInsights),
+    db.select().from(generatedMaterials),
+  ]);
+
+  const profileBy = new Map(profiles.map((p) => [p.accountId, p.data]));
+  const usageBy = groupBy(usage, (u) => u.accountId);
+  const spendBy = groupBy(spend, (s) => s.accountId);
+  const msBy = groupBy(ms, (m) => m.accountId);
+  const qsBy = groupBy(qs, (q) => q.accountId);
+  const insightsBy = groupBy(insights, (i) => i.accountId);
+  const materialsBy = groupBy(materials, (m) => m.accountId);
+
+  return accts.flatMap((a) => {
+    const profile = profileBy.get(a.id);
+    if (!profile) return [];
+    const u = usageBy.get(a.id) ?? [];
+    const s = spendBy.get(a.id) ?? [];
+    const m = msBy.get(a.id) ?? [];
+    const q = qsBy.get(a.id) ?? [];
+    return [
+      {
+        account: a,
+        profile,
+        stageDay: stageDay(a.stageStartDate, now),
+        milestones: m,
+        usage: u,
+        spend: s,
+        questions: q,
+        insights: toInsights(insightsBy.get(a.id) ?? []),
+        health: healthFor(a, profile, { usage: u, spend: s, milestones: m, questions: q }, now),
+        expansion: expansionFor(a, profile, u, s),
+        materials: Object.fromEntries(
+          (materialsBy.get(a.id) ?? []).map((x) => [x.kind, { content: x.content, updatedAt: x.updatedAt }]),
+        ),
+      },
+    ];
+  });
+}
+
+/** The whole book, deduped per request across the sidebar, the page, and the rep chat. */
+export const getBook = cache(() => loadBook());
+
+/** The at-a-glance numbers for one account (used by the book and by the account header). */
+export function summarize(d: AccountDetail, now: Date = new Date()): AccountSummary {
+  const a = d.account;
+  const usage = sortSnapshots(d.usage);
+  const latest = usage.at(-1);
+  const base = baselineSnapshot(usage);
+  const lastMonth = d.spend.at(-1);
+  const today = todayISO(now);
+  return {
+    id: a.id,
+    slug: a.slug,
+    name: a.name,
+    industry: a.industry,
+    stage: a.stage,
+    stageDay: d.stageDay,
+    pilotLengthDays: a.pilotLengthDays,
+    seats: a.seats,
+    activeSeats: latest?.activeSeats ?? null,
+    activePct: latest ? activePct(latest.activeSeats, a.seats) : null,
+    activeChange:
+      latest && base ? activePct(latest.activeSeats, a.seats) - activePct(base.activeSeats, a.seats) : null,
+    adoptionSeries: usage.map((x) => activePct(x.activeSeats, a.seats)),
+    monthlySpend: lastMonth ? lastMonth.seatSpend + lastMonth.usageSpend : null,
+    spendSeries: d.spend.map((x) => x.seatSpend + x.usageSpend),
+    spendTrend: spendTrend(d.spend),
+    renewalInDays: a.renewalDate ? daysBetween(today, a.renewalDate) : null,
+    championName: d.profile.champion.name,
+    championLastVisitAt: a.championLastVisitAt,
+    overdueCount: d.milestones.filter((m) => m.status !== "done" && m.dueDate < today).length,
+    health: d.health,
+    expansion: d.expansion,
+    riskPlay: d.insights.risk_play,
+    expansionPitch: d.insights.expansion_pitch,
+  };
+}
+
+/** Every account with its latest usage, spend trend, health, and growth signals. Rep side only. */
+export async function listAccountSummaries(now: Date = new Date()): Promise<AccountSummary[]> {
+  const book = await getBook();
+  return book.map((d) => summarize(d, now));
+}
+
+/** Summaries, deduped per request. */
+export const getSummaries = cache(() => listAccountSummaries());
 
 /**
  * What the customer app is allowed to see. Built field by field so internal data
@@ -225,6 +312,8 @@ export const getAccountDetail = cache(async (slug: string): Promise<AccountDetai
  */
 export type CustomerView = {
   name: string;
+  /** Which hand-drawn demo logo to show, if any. The slug itself is not exposed. */
+  logoId: SeedLogoId | null;
   industry: string;
   seats: number;
   stage: Stage;
@@ -265,6 +354,7 @@ export const getCustomerView = cache(async (token: string): Promise<CustomerView
 
   return {
     name: a.name,
+    logoId: seedLogoId(a.slug),
     industry: a.industry,
     seats: a.seats,
     stage: a.stage,
@@ -310,4 +400,62 @@ export async function getAskContext(
     .limit(1);
   if (!row) return null;
   return { ...view, accountId: row.id, slug: row.slug, concerns: row.profile.concerns.map((c) => c.concern) };
+}
+
+// ----------------------------------------------------------------------------
+// Business reviews and learning paths
+// ----------------------------------------------------------------------------
+
+export type StoredReview = {
+  content: BusinessReview;
+  status: "draft" | "published";
+  source: "seed" | "live";
+  generatedAt: Date;
+  publishedAt: Date | null;
+};
+
+async function reviewFor(accountId: string): Promise<StoredReview | null> {
+  const db = await getDb();
+  const [row] = await db.select().from(businessReviews).where(eq(businessReviews.accountId, accountId)).limit(1);
+  if (!row) return null;
+  const parsed = businessReviewSchema.safeParse(row.content);
+  if (!parsed.success) return null;
+  return { content: parsed.data, status: row.status, source: row.source, generatedAt: row.generatedAt, publishedAt: row.publishedAt };
+}
+
+/** The rep's view of the review: drafts included. */
+export async function getAccountReview(accountId: string): Promise<StoredReview | null> {
+  return reviewFor(accountId);
+}
+
+async function accountIdForToken(token: string): Promise<string | null> {
+  if (!isTokenShape(token)) return null;
+  const db = await getDb();
+  const [row] = await db.select({ id: accounts.id }).from(accounts).where(eq(accounts.customerToken, token)).limit(1);
+  return row?.id ?? null;
+}
+
+/** The customer's view: only a published review, never a draft. */
+export const getCustomerReview = cache(async (token: string): Promise<StoredReview | null> => {
+  const id = await accountIdForToken(token);
+  if (!id) return null;
+  const review = await reviewFor(id);
+  return review?.status === "published" ? review : null;
+});
+
+export async function getLearningForAccount(accountId: string): Promise<LearningSummary> {
+  const db = await getDb();
+  const rows = await db.select().from(learningCompletions).where(eq(learningCompletions.accountId, accountId));
+  return summarizeLearning(rows);
+}
+
+/** Learning path progress for the customer portal (names are what learners typed, shown to their own team). */
+export const getCustomerLearning = cache(async (token: string): Promise<LearningSummary | null> => {
+  const id = await accountIdForToken(token);
+  return id ? getLearningForAccount(id) : null;
+});
+
+/** For write actions: the account behind a customer token. */
+export async function getAccountIdForToken(token: string): Promise<string | null> {
+  return accountIdForToken(token);
 }

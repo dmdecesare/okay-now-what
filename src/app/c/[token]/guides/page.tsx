@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { BookOpen } from "lucide-react";
+import { PortalHeader } from "@/components/customer/portal-header";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badges";
 import { TabSkeleton } from "@/components/account/tab-skeleton";
@@ -25,6 +27,11 @@ async function Guides({ params }: { params: PageProps<"/c/[token]/guides">["para
 
   return (
     <div className="space-y-8">
+      <PortalHeader
+        icon={<BookOpen />}
+        title="Guides"
+        description="From first install to agent mode, organized by level and by role. Every link goes to the official GitHub docs."
+      />
       {c.profile.guides.length > 0 && (
         <section>
           <h2 className="text-title font-semibold">Picked for {c.name}</h2>

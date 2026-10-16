@@ -2,29 +2,19 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { CONDITIONAL_TABS, CUSTOMER_NAV } from "@/lib/customer-routes";
 import { cn } from "@/lib/cn";
 
-const TABS = [
-  { href: "", label: "Home" },
-  { href: "/plan", label: "Plan" },
-  { href: "/videos", label: "Videos" },
-  { href: "/guides", label: "Guides" },
-  { href: "/setup", label: "Setup guide" },
-  { href: "/kit", label: "Champion kit" },
-  { href: "/progress", label: "Progress" },
-  { href: "/ask", label: "Ask" },
-];
-
-export function CustomerTabNav({ token }: { token: string }) {
+export function CustomerTabNav({ token, hasReview }: { token: string; hasReview: boolean }) {
   const pathname = usePathname();
   // Keep rep preview mode on while clicking between tabs.
   const preview = useSearchParams().get("preview") === "1" ? "?preview=1" : "";
   const base = `/c/${token}`;
 
   return (
-    <nav aria-label="Onboarding sections" className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-      <ul className="flex min-w-max gap-1">
-        {TABS.map((t) => {
+    <nav aria-label="Portal sections" className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+      <ul className="flex min-w-max gap-0.5">
+        {CUSTOMER_NAV.filter((t) => hasReview || t.href !== CONDITIONAL_TABS.review).map((t) => {
           const href = base + t.href;
           const active = pathname === href;
           return (
@@ -33,8 +23,8 @@ export function CustomerTabNav({ token }: { token: string }) {
                 href={href + preview}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "block rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
-                  active ? "bg-bg text-ink shadow-sm" : "text-accent-ink/80 hover:bg-bg/60 hover:text-ink",
+                  "-mb-px block border-b-2 px-3 py-3 text-sm font-medium transition-colors",
+                  active ? "border-accent text-ink" : "border-transparent text-ink-muted hover:border-border-strong hover:text-ink",
                 )}
               >
                 {t.label}

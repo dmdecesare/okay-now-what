@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { PlayCircle } from "lucide-react";
+import { PortalHeader } from "@/components/customer/portal-header";
 import { Card } from "@/components/ui/card";
 import { TabSkeleton } from "@/components/account/tab-skeleton";
 import { SendToDevs } from "@/components/customer/send-to-devs";
@@ -24,6 +26,11 @@ async function Videos({ params }: { params: PageProps<"/c/[token]/videos">["para
 
   return (
     <div className="space-y-6">
+      <PortalHeader
+        icon={<PlayCircle />}
+        title="Videos"
+        description="Short, official videos from GitHub, grouped by topic. Share the right ones with your developers in one click."
+      />
       <Card>
         <h2 className="font-semibold">Share videos with your developers</h2>
         <p className="mb-4 mt-1 text-sm text-ink-muted">

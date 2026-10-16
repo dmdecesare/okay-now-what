@@ -1,12 +1,14 @@
+import Link from "next/link";
 import { isCatalogUrl } from "@/lib/ai/format";
 
 // A deliberately small formatter for Ask answers: paragraphs, numbered lists (with
-// sub-bullets), bullet lists, **bold**, `code`, and links. Links render only when they
-// point at the verified doc catalog. No HTML from the model is ever injected.
+// sub-bullets), bullet lists, **bold**, `code`, and links. External links render only when they
+// point at the verified doc catalog; internal links (rep chat) only when they are on the allowlist
+// passed in. No HTML from the model is ever injected.
 
-function inline(text: string, keyBase: string): React.ReactNode[] {
+function inline(text: string, keyBase: string, internal?: ReadonlySet<string>): React.ReactNode[] {
   const parts: React.ReactNode[] = [];
-  const re = /\*\*([^*]+)\*\*|`([^`]+)`|\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g;
+  const re = /\*\*([^*]+)\*\*|`([^`]+)`|\[([^\]]+)\]\(((?:https?:\/\/|\/)[^)\s]+)\)/g;
   let last = 0;
   let m: RegExpExecArray | null;
   let i = 0;
@@ -20,6 +22,16 @@ function inline(text: string, keyBase: string): React.ReactNode[] {
         <code key={key} className="rounded bg-surface-strong px-1 py-0.5 font-mono text-[0.85em]">
           {m[2]}
         </code>,
+      );
+    } else if (m[3] && m[4] && m[4].startsWith("/")) {
+      parts.push(
+        internal?.has(m[4].split("#")[0]) ? (
+          <Link key={key} href={m[4]} className="font-medium text-accent underline decoration-accent/30 underline-offset-2 hover:decoration-accent">
+            {m[3]}
+          </Link>
+        ) : (
+          m[3]
+        ),
       );
     } else if (m[3] && m[4]) {
       parts.push(
@@ -91,7 +103,7 @@ function parse(text: string): Block[] {
   return blocks.filter((b) => (b.kind === "p" ? b.lines.length > 0 : true));
 }
 
-export function AnswerText({ text }: { text: string }) {
+export function AnswerText({ text, internalHrefs }: { text: string; internalHrefs?: ReadonlySet<string> }) {
   return (
     <div className="space-y-3 text-sm leading-relaxed">
       {parse(text).map((b, bi) => {
@@ -100,11 +112,11 @@ export function AnswerText({ text }: { text: string }) {
             <ol key={bi} className="list-decimal space-y-1.5 pl-5">
               {b.items.map((it, ii) => (
                 <li key={ii}>
-                  {inline(it.text, `${bi}-${ii}`)}
+                  {inline(it.text, `${bi}-${ii}`, internalHrefs)}
                   {it.subs.length > 0 && (
                     <ul className="mt-1 list-disc space-y-0.5 pl-5">
                       {it.subs.map((s, si) => (
-                        <li key={si}>{inline(s, `${bi}-${ii}-${si}`)}</li>
+                        <li key={si}>{inline(s, `${bi}-${ii}-${si}`, internalHrefs)}</li>
                       ))}
                     </ul>
                   )}
@@ -127,7 +139,7 @@ export function AnswerText({ text }: { text: string }) {
           return (
             <ul key={bi} className="list-disc space-y-1 pl-5">
               {b.items.map((it, ii) => (
-                <li key={ii}>{inline(it, `${bi}-${ii}`)}</li>
+                <li key={ii}>{inline(it, `${bi}-${ii}`, internalHrefs)}</li>
               ))}
             </ul>
           );
@@ -137,7 +149,7 @@ export function AnswerText({ text }: { text: string }) {
             {b.lines.map((l, li) => (
               <span key={li}>
                 {li > 0 && <br />}
-                {inline(l, `${bi}-${li}`)}
+                {inline(l, `${bi}-${li}`, internalHrefs)}
               </span>
             ))}
           </p>

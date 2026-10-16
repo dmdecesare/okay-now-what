@@ -3,6 +3,8 @@ import { TabSkeleton } from "@/components/account/tab-skeleton";
 import { ToolCard } from "@/components/account/tool-card";
 import { generateToolAction } from "@/app/actions/ai";
 import type { AccountProfile, MaterialKind } from "@/lib/schemas";
+import { getAccountReview, getCustomerView, getLearningForAccount } from "@/db/queries";
+import { ReviewToolCard } from "@/components/review/review-tool-card";
 import { loadAccount } from "../load";
 
 type Tool = { kind: MaterialKind; title: string; description: string; pilotOnly?: boolean };
@@ -47,9 +49,17 @@ export default function ToolsPage({ params }: PageProps<"/accounts/[slug]/tools"
 async function Tools({ params }: { params: PageProps<"/accounts/[slug]/tools">["params"] }) {
   const { account, profile, materials } = await loadAccount(params);
   const tools = TOOLS.filter((t) => !t.pilotOnly || account.stage === "pilot");
+  const [view, review, learning] = await Promise.all([
+    getCustomerView(account.customerToken),
+    getAccountReview(account.id),
+    getLearningForAccount(account.id),
+  ]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {view && (
+        <ReviewToolCard slug={account.slug} token={account.customerToken} view={view} review={review} learning={learning} />
+      )}
       <p className="text-sm text-ink-muted">
         One-click drafts written by Claude for {account.name}, using this account&apos;s goals, people, and numbers. Edit them here, then copy them anywhere.
       </p>

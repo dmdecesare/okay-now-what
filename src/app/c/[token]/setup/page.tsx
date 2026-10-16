@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { ShieldCheck } from "lucide-react";
+import { PortalHeader } from "@/components/customer/portal-header";
 import { Card, EmptyState } from "@/components/ui/card";
 import { CopyButton } from "@/components/ui/copy-button";
 import { TabSkeleton } from "@/components/account/tab-skeleton";
@@ -29,12 +31,11 @@ async function Setup({ params }: { params: PageProps<"/c/[token]/setup">["params
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-title font-semibold">Setup guide</h2>
-        <p className="mt-1 text-ink-muted">
-          The admin and security steps that matter for {c.name}, built around the questions your team raised.
-        </p>
-      </div>
+      <PortalHeader
+        icon={<ShieldCheck />}
+        title="Setup guide"
+        description={`The admin and security steps that matter for ${c.name}, built around the questions your team raised.`}
+      />
 
       {c.profile.setupSteps.length === 0 && (
         <EmptyState

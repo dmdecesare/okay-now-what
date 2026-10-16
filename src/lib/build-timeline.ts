@@ -87,4 +87,25 @@ export const BUILD_TIMELINE: TimelineEntry[] = [
     claude: "Wrote this page and the README, scanned every commit for secrets, and published the repo.",
     derek: "Approved making the repo public after the secrets check passed.",
   },
+  {
+    phase: "10",
+    title: "v2: a real product look",
+    when: "Oct 16",
+    claude: "Rebuilt the design system (tokens, shadows, tables, panels), drew made-up logos for the demo companies, and redesigned the rep side with a dark sidebar, a branded home with charts, an activity feed, and account profile pages.",
+    derek: "Pushed back that the first pass still looked basic, and chose the polished SaaS direction.",
+  },
+  {
+    phase: "11",
+    title: "v2: the customer's whole journey",
+    when: "Oct 16",
+    claude: "Turned the onboarding app into a customer success portal: a five-step journey, a floating Ask on every page, developer learning paths with a team leaderboard, and a business review the rep publishes.",
+    derek: "Asked for the story to be customer success across the journey, and picked the four new features.",
+  },
+  {
+    phase: "12",
+    title: "v2: Claude for the rep",
+    when: "Oct 16",
+    claude: "Added a rep assistant that knows the whole book, a one-page call brief, and expansion signals with a written expansion play. Made rep previews of Ask stop saving questions.",
+    derek: "Wanted to ask questions about his own accounts, and approved restarting the local server to test it.",
+  },
 ];

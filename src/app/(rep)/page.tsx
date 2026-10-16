@@ -1,133 +1,153 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { listAccountSummaries, type AccountSummary } from "@/db/queries";
+import { Building2 } from "lucide-react";
+import { getBook, getSummaries, type AccountSummary } from "@/db/queries";
 import { AtRiskPanel } from "@/components/at-risk-panel";
+import { ExpansionPanel } from "@/components/home/expansion-panel";
+import { AccountsTable } from "@/components/home/accounts-table";
+import { HeroLink, HomeHero, weekSummary, type HeroStat } from "@/components/home/hero";
+import { SeatUtilization } from "@/components/home/seat-utilization";
+import { PortfolioHealth } from "@/components/home/portfolio-health";
+import { ActivityFeed } from "@/components/home/activity-feed";
+import { Upcoming } from "@/components/home/upcoming";
+import { HeroAskClaude } from "@/components/rep-chat/rep-chat";
 import { ButtonLink } from "@/components/ui/button";
-import { Card, EmptyState } from "@/components/ui/card";
-import { StageBadge, StatusPill } from "@/components/ui/badges";
-import { ProgressBar, Stat, TrendArrow } from "@/components/ui/metrics";
+import { EmptyState } from "@/components/ui/card";
+import { recentActivity, upcoming } from "@/lib/activity";
 import { formatNumber, formatUSD } from "@/lib/format";
 import { pct } from "@/lib/adoption";
 
 export default function HomePage() {
   return (
-    <>
-      <div className="mb-8">
-        <h1 className="text-display font-semibold">Book of business</h1>
-        <p className="mt-1 text-ink-muted">Every account you own after the deal closes, in one place.</p>
-      </div>
-      <Suspense fallback={<HomeSkeleton />}>
-        <Book />
-      </Suspense>
-    </>
+    <Suspense fallback={<HomeSkeleton />}>
+      <Book />
+    </Suspense>
   );
 }
 
 async function Book() {
   await connection();
-  const accounts = await listAccountSummaries();
+  const [accounts, book] = await Promise.all([getSummaries(), getBook()]);
+  const now = new Date();
 
   if (accounts.length === 0) {
     return (
       <EmptyState
+        icon={<Building2 className="size-5" />}
         title="No accounts yet. Okay, now what?"
-        body="Add your first one. Paste your deal notes and we'll build the plan and the customer's onboarding app."
+        body="Add your first one. Paste your deal notes and Claude builds the plan and the customer's success portal."
         action={<ButtonLink href="/accounts/new">Add account</ButtonLink>}
       />
     );
   }
 
   return (
-    <div className="space-y-8">
-      <AtAGlance accounts={accounts} />
-      <AtRiskPanel accounts={accounts} />
-      <section aria-labelledby="accounts-heading">
-        <h2 id="accounts-heading" className="sr-only">
-          Accounts
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {accounts.map((a) => (
-            <AccountCard key={a.id} account={a} />
-          ))}
+    <div className="space-y-6">
+      <HomeHero
+        date={now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+        summary={weekSummary(accounts)}
+        stats={heroStats(accounts)}
+        actions={
+          <>
+            <HeroAskClaude />
+            <HeroLink href="/behind-the-build">How this was built</HeroLink>
+          </>
+        }
+      />
+
+      <div className="grid items-start gap-4 lg:grid-cols-2">
+        <AtRiskPanel accounts={accounts} />
+        <ExpansionPanel accounts={accounts} />
+      </div>
+
+      <div className="grid items-start gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <SeatUtilization accounts={accounts} />
         </div>
-      </section>
+        <PortfolioHealth accounts={accounts} />
+      </div>
+
+      <AccountsTable accounts={accounts} />
+
+      <div className="grid items-start gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <ActivityFeed events={recentActivity(book, 7, now)} />
+        </div>
+        <Upcoming items={upcoming(book, 6, now)} />
+      </div>
     </div>
   );
 }
 
-function AtAGlance({ accounts }: { accounts: AccountSummary[] }) {
+/**
+ * Total monthly spend across accounts, oldest first. Only accounts with the full window count, so a
+ * newly added account doesn't look like growth.
+ */
+function bookSpendSeries(accounts: AccountSummary[]): number[] {
+  const withData = accounts.filter((a) => a.spendSeries.length >= 2);
+  if (withData.length === 0) return [];
+  const len = Math.min(...withData.map((a) => a.spendSeries.length));
+  return Array.from({ length: len }, (_, i) =>
+    withData.reduce((n, a) => n + a.spendSeries[a.spendSeries.length - len + i], 0),
+  );
+}
+
+function heroStats(accounts: AccountSummary[]): HeroStat[] {
   const seats = accounts.reduce((n, a) => n + a.seats, 0);
   const live = accounts.filter((a) => a.activeSeats != null);
   const activeSeats = live.reduce((n, a) => n + (a.activeSeats ?? 0), 0);
   const liveSeats = live.reduce((n, a) => n + a.seats, 0);
-  const spend = accounts.reduce((n, a) => n + (a.monthlySpend ?? 0), 0);
+  const activeNow = liveSeats > 0 ? pct(activeSeats, liveSeats) : null;
+  const change =
+    liveSeats > 0 ? Math.round(live.reduce((n, a) => n + (a.activeChange ?? 0) * a.seats, 0) / liveSeats) : 0;
 
-  return (
-    <Card className="grid grid-cols-2 gap-5 sm:grid-cols-4">
-      <Stat label="Accounts" value={accounts.length} />
-      <Stat label="Seats" value={formatNumber(seats)} />
-      <Stat
-        label="Active across book"
-        value={liveSeats > 0 ? `${pct(activeSeats, liveSeats)}%` : "-"}
-        sub={`${formatNumber(activeSeats)} active seats`}
-      />
-      <Stat label="Monthly spend" value={formatUSD(spend)} sub="This month" />
-    </Card>
-  );
-}
+  const spendNow = accounts.reduce((n, a) => n + (a.monthlySpend ?? 0), 0);
+  const spendSeries = bookSpendSeries(accounts);
+  const prev = spendSeries.at(-2);
+  const last = spendSeries.at(-1);
+  const spendChange = prev && last ? Math.round(((last - prev) / prev) * 1000) / 10 : null;
 
-function AccountCard({ account: a }: { account: AccountSummary }) {
-  return (
-    <Link
-      href={`/accounts/${a.slug}`}
-      className="group block rounded-xl focus-visible:outline-offset-4"
-    >
-      <Card className="flex h-full flex-col gap-4 transition-colors group-hover:border-border-strong group-hover:bg-surface/50">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h3 className="font-semibold group-hover:text-accent">{a.name}</h3>
-            <p className="text-sm text-ink-muted">{a.industry}</p>
-          </div>
-          <StatusPill status={a.health.status} />
-        </div>
+  const renewals = accounts
+    .filter((a) => a.renewalInDays != null)
+    .sort((a, b) => (a.renewalInDays ?? 0) - (b.renewalInDays ?? 0));
+  const ready = accounts.filter((a) => a.expansion.level !== "none").length;
 
-        <div className="flex flex-wrap items-center gap-2 text-sm text-ink-muted">
-          <StageBadge stage={a.stage} />
-          <span>Day {a.stageDay}</span>
-          <span aria-hidden>·</span>
-          <span>{formatNumber(a.seats)} seats</span>
-        </div>
-
-        {a.activePct != null ? (
-          <ProgressBar value={a.activePct} label={`${formatNumber(a.activeSeats ?? 0)} active seats`} />
-        ) : (
-          <p className="text-sm text-ink-faint">No usage data yet</p>
-        )}
-
-        <div className="mt-auto flex items-center justify-between border-t border-border pt-3 text-sm">
-          <span className="flex items-center gap-1.5 text-ink-muted">
-            Spend <TrendArrow trend={a.spendTrend} />
-          </span>
-          <span className="tabular-nums text-ink-muted">
-            {a.monthlySpend != null ? `${formatUSD(a.monthlySpend)}/mo` : "-"}
-          </span>
-        </div>
-      </Card>
-    </Link>
-  );
+  return [
+    {
+      label: "Accounts",
+      value: accounts.length,
+      sub: `${formatNumber(seats)} seats under contract`,
+    },
+    {
+      label: "Active across book",
+      value: activeNow != null ? `${activeNow}%` : "-",
+      sub: change ? `${change > 0 ? "+" : ""}${change} pts in 30 days` : `${formatNumber(activeSeats)} active seats`,
+      tone: change > 0 ? "up" : change < 0 ? "down" : undefined,
+    },
+    {
+      label: "Monthly spend",
+      value: formatUSD(spendNow),
+      sub: spendChange != null ? `${spendChange > 0 ? "+" : ""}${spendChange}% vs last month` : "This month",
+      tone: spendChange != null ? (spendChange >= 0 ? "up" : "down") : undefined,
+      spark: spendSeries,
+    },
+    {
+      label: "Growth and renewals",
+      value: `${ready} ready to grow`,
+      sub: renewals[0] ? `Next renewal in ${renewals[0].renewalInDays} days` : undefined,
+    },
+  ];
 }
 
 function HomeSkeleton() {
   return (
-    <div className="space-y-8" aria-busy>
-      <div className="h-24 animate-pulse rounded-xl bg-surface" />
-      <div className="h-32 animate-pulse rounded-xl bg-surface" />
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="h-52 animate-pulse rounded-xl border border-border bg-surface" />
-        ))}
+    <div className="space-y-6" aria-busy>
+      <div className="h-[260px] animate-pulse rounded-2xl bg-sidebar/90" />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="h-56 animate-pulse rounded-xl border border-border bg-bg" />
+        <div className="h-56 animate-pulse rounded-xl border border-border bg-bg" />
       </div>
+      <div className="h-72 animate-pulse rounded-xl border border-border bg-bg" />
     </div>
   );
 }
