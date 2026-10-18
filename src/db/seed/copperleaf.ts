@@ -22,6 +22,14 @@ export const copperleaf: SeedAccount = {
   dealNotes: `Dan drove this, rolled out to 2 teams informally before buying. CISO concerned about loan decisioning repo + anything touching credit models, wants it excluded. regulators (state + CFPB exam stuff) came up, need audit story. dev ex team will run enablement but are 3 people. Dan's goal: every dev using it weekly by end of Q1, and onboarding new hires faster (ramp takes ~3 months now). CFO wants to see value at 6 months or they cut seats. mostly VS Code, some JetBrains.`,
 
   profile: {
+    promptRecipes: [
+      { tag: "Understand", title: "Get up to speed on a service", useWhen: "Your first weeks on a lending service.", prompt: "Explain the architecture of [service] like I'm a new hire: main modules, how data flows, and the three files I should read first." },
+      { tag: "Test", title: "Tests for a loan calculation", useWhen: "Changing anything that touches amounts or rates.", prompt: "Write unit tests for [function] covering rounding, zero and negative values, leap years in date math, and the largest loan amount we support." },
+      { tag: "Write", title: "Document an API for audits", useWhen: "You need clear docs for a compliance review.", prompt: "Write a short README section for [endpoint] covering inputs, outputs, validation rules, and error codes, in plain language an auditor can follow." },
+      { tag: "Refactor", title: "Modernize an old module", useWhen: "Cleaning up older code before adding features.", prompt: "Suggest a step-by-step refactor of [file] into smaller functions. Keep behavior identical and propose one test per step to prove it." },
+      { tag: "Review", title: "Check a PR before review", useWhen: "Before you ask a teammate for review.", prompt: "Review this diff for bugs, missing tests, and unclear names. Keep the feedback short and ordered by importance." },
+      { tag: "Admin", title: "Confirm a repo is excluded", useWhen: "Checking content exclusion settings.", prompt: "Explain how content exclusion works for [repository], how to confirm Copilot ignores it in VS Code and JetBrains, and what an admin should test after changing the setting." },
+    ],
     summary:
       "550 seats, day 10 of onboarding. Dan wants every developer using Copilot weekly by end of Q1. The CISO needs credit model code excluded and an audit story for regulators, and the CFO will review value at six months.",
     goals: [

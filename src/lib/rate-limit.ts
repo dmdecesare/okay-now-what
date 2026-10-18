@@ -20,6 +20,8 @@ const GROUPS = {
       "expansionPitch",
       "businessReview",
       "callLog",
+      "nudgeEmail",
+      "promptRecipes",
     ] as AiFeature[],
     limit: () => RATE_LIMITS.repPerHour,
   },

@@ -35,6 +35,10 @@ export const AI_FEATURES = {
   expansionPitch: { model: MODELS.sonnet, effort: "low", maxTokens: 4000, label: "Expansion play" },
   /** Reads the rep's call notes and proposes account updates plus a follow-up email. */
   callLog: { model: MODELS.sonnet, effort: "medium", maxTokens: 8000, label: "Log a call" },
+  /** A short email from the rep about one nudge. */
+  nudgeEmail: { model: MODELS.sonnet, effort: "low", maxTokens: 2000, label: "Nudge email" },
+  /** Copy-ready Copilot prompts tailored to a customer. */
+  promptRecipes: { model: MODELS.sonnet, effort: "medium", maxTokens: 6000, label: "Prompt recipes" },
   /** The customer-facing business review. */
   businessReview: { model: MODELS.sonnet, effort: "medium", maxTokens: 8000, label: "Business review" },
 } as const satisfies Record<string, FeatureConfig>;

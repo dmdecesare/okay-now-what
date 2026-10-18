@@ -9,7 +9,10 @@ import { todayISO } from "@/lib/dates";
 import { formatDate } from "@/lib/format";
 import { brandColor } from "@/lib/logos";
 import { cn } from "@/lib/cn";
-import { getCustomerSupport } from "@/db/queries";
+import { getCustomerLearning, getCustomerSupport } from "@/db/queries";
+import { HeadsUp } from "@/components/customer/heads-up";
+import { FirstWeek } from "@/components/customer/first-week";
+import { computeNudges } from "@/lib/nudges";
 import { PulseCard } from "@/components/customer/pulse-card";
 import { RequestHelp } from "@/components/customer/request-help";
 import { HELP_KIND_LABELS } from "@/lib/support";
@@ -45,7 +48,12 @@ function Ring({ value }: { value: number }) {
 
 async function CustomerHome({ params }: { params: PageProps<"/c/[token]">["params"] }) {
   const c = await loadCustomer(params);
-  const support = (await getCustomerSupport(c.token)) ?? { requests: [], pulse: { count: 0, average: null } };
+  const [supportRow, learning] = await Promise.all([getCustomerSupport(c.token), getCustomerLearning(c.token)]);
+  const support = supportRow ?? { requests: [], pulse: { count: 0, average: null } };
+  const nudges = computeNudges(
+    { seats: c.seats, milestones: c.milestones, usage: c.usage, learners: learning?.learners ?? 0, pulseAnswers: support.pulse.count },
+    "customer",
+  );
   const today = todayISO();
   const firstName = c.profile.champion.name?.split(" ")[0];
   const done = c.milestones.filter((m) => m.status === "done").length;
@@ -108,12 +116,16 @@ async function CustomerHome({ params }: { params: PageProps<"/c/[token]">["param
         </div>
       </section>
 
+      <HeadsUp token={c.token} nudges={nudges} />
+
       <section aria-labelledby="journey-heading">
         <h2 id="journey-heading" className="mb-3 text-title font-semibold">
           Your journey
         </h2>
         <Journey current={step} />
       </section>
+
+      <FirstWeek token={c.token} />
 
       <div className="grid items-start gap-6 lg:grid-cols-2">
         <PulseCard token={c.token} average={support.pulse.average} count={support.pulse.count} />

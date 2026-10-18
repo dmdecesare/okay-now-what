@@ -4,6 +4,7 @@ export const CUSTOMER_NAV = [
   { href: "", label: "Home" },
   { href: "/plan", label: "Plan" },
   { href: "/learn", label: "Learn" },
+  { href: "/prompts", label: "Prompts" },
   { href: "/guides", label: "Guides" },
   { href: "/videos", label: "Videos" },
   { href: "/setup", label: "Setup guide" },

@@ -163,6 +163,8 @@ export type AccountDetail = {
   /** Help the customer asked for in their portal, newest first. */
   helpRequests: HelpRequest[];
   pulse: PulseSummary;
+  /** Developers who have started a learning path. */
+  learningLearners: number;
   /** Saved tool drafts, by kind. */
   materials: Partial<Record<MaterialKind, { content: string; updatedAt: Date }>>;
 };
@@ -179,7 +181,7 @@ export const getAccountDetail = cache(async (slug: string): Promise<AccountDetai
   if (!row) return null;
 
   const id = row.account.id;
-  const [ms, usage, spend, questions, insights, materials, calls, requests, pulse] = await Promise.all([
+  const [ms, usage, spend, questions, insights, materials, calls, requests, pulse, learning] = await Promise.all([
     db.select().from(milestones).where(eq(milestones.accountId, id)).orderBy(asc(milestones.sortOrder)),
     db.select().from(usageSnapshots).where(eq(usageSnapshots.accountId, id)).orderBy(asc(usageSnapshots.date)),
     db.select().from(spendMonths).where(eq(spendMonths.accountId, id)).orderBy(asc(spendMonths.month)),
@@ -193,6 +195,7 @@ export const getAccountDetail = cache(async (slug: string): Promise<AccountDetai
     db.select().from(callLogs).where(eq(callLogs.accountId, id)).orderBy(desc(callLogs.occurredOn), desc(callLogs.createdAt)),
     db.select().from(helpRequests).where(eq(helpRequests.accountId, id)).orderBy(desc(helpRequests.createdAt)),
     db.select().from(pulseResponses).where(eq(pulseResponses.accountId, id)),
+    db.select({ nameKey: learningCompletions.nameKey }).from(learningCompletions).where(eq(learningCompletions.accountId, id)),
   ]);
 
   const now = new Date();
@@ -210,6 +213,7 @@ export const getAccountDetail = cache(async (slug: string): Promise<AccountDetai
     calls,
     helpRequests: requests,
     pulse: summarizePulse(pulse, now),
+    learningLearners: new Set(learning.map((l) => l.nameKey)).size,
     materials: Object.fromEntries(materials.map((m) => [m.kind, { content: m.content, updatedAt: m.updatedAt }])),
   };
 });
@@ -230,7 +234,7 @@ function expansionFor(a: Account, profile: AccountProfile, usage: UsageSnapshot[
  */
 async function loadBook(now: Date = new Date()): Promise<AccountDetail[]> {
   const db = await getDb();
-  const [accts, profiles, usage, spend, ms, qs, insights, materials, calls, requests, pulse] = await Promise.all([
+  const [accts, profiles, usage, spend, ms, qs, insights, materials, calls, requests, pulse, learning] = await Promise.all([
     db.select().from(accounts).orderBy(asc(accounts.createdAt), asc(accounts.name)),
     db.select().from(accountProfiles),
     db.select().from(usageSnapshots).orderBy(asc(usageSnapshots.date)),
@@ -242,7 +246,9 @@ async function loadBook(now: Date = new Date()): Promise<AccountDetail[]> {
     db.select().from(callLogs).orderBy(desc(callLogs.occurredOn), desc(callLogs.createdAt)),
     db.select().from(helpRequests).orderBy(desc(helpRequests.createdAt)),
     db.select().from(pulseResponses),
+    db.select({ accountId: learningCompletions.accountId, nameKey: learningCompletions.nameKey }).from(learningCompletions),
   ]);
+  const learnersBy = groupBy(learning, (l) => l.accountId);
 
   const callsBy = groupBy(calls, (c) => c.accountId);
   const requestsBy = groupBy(requests, (r) => r.accountId);
@@ -277,6 +283,7 @@ async function loadBook(now: Date = new Date()): Promise<AccountDetail[]> {
         calls: callsBy.get(a.id) ?? [],
         helpRequests: requestsBy.get(a.id) ?? [],
         pulse: summarizePulse(pulseBy.get(a.id) ?? [], now),
+        learningLearners: new Set((learnersBy.get(a.id) ?? []).map((l) => l.nameKey)).size,
         materials: Object.fromEntries(
           (materialsBy.get(a.id) ?? []).map((x) => [x.kind, { content: x.content, updatedAt: x.updatedAt }]),
         ),
@@ -348,7 +355,7 @@ export type CustomerView = {
   stage: Stage;
   stageDay: number;
   pilotLengthDays: number | null;
-  profile: Pick<AccountProfile, "successCriteria" | "thisWeek" | "setupSteps" | "championKit" | "guides"> & {
+  profile: Pick<AccountProfile, "successCriteria" | "thisWeek" | "setupSteps" | "championKit" | "guides" | "promptRecipes"> & {
     // Goals without the "in their words" quotes and champion without rep notes:
     // both come from internal deal notes.
     goals: { goal: string }[];
@@ -397,6 +404,7 @@ export const getCustomerView = cache(async (token: string): Promise<CustomerView
       setupSteps: p.setupSteps,
       championKit: p.championKit,
       guides: p.guides,
+      promptRecipes: p.promptRecipes ?? [],
     },
     milestones: ms.map(toChecklist),
     usage: usage.map((u) => ({ date: u.date, activeSeats: u.activeSeats, teams: u.teams })),

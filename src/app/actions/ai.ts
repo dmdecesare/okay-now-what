@@ -2,11 +2,16 @@
 
 import { headers } from "next/headers";
 import { refresh } from "next/cache";
-import { AiError, FRIENDLY_AI_MESSAGE } from "@/lib/ai/client";
+import { AiError, FRIENDLY_AI_MESSAGE, generateText, systemBlocks } from "@/lib/ai/client";
+import { noEmDash } from "@/lib/ai/format";
+import { NUDGE_EMAIL_SYSTEM, nudgeEmailInput } from "@/lib/ai/prompts";
+import { getAccountDetail } from "@/db/queries";
+import { repNudges } from "@/lib/nudges-for";
 import { generateMaterial, insightFeature, regenerateInsight } from "@/lib/ai/insights";
 import type { AiFeature } from "@/lib/ai/config";
 import { BREATHER_MESSAGE, allowWrite, callerIp, hashIp, isRateLimited, recordCall } from "@/lib/rate-limit";
 import { generateBusinessReview, setReviewPublished } from "@/lib/ai/review";
+import { generatePromptRecipes } from "@/lib/ai/recipes";
 import { INSIGHT_KINDS, MATERIAL_KINDS, type InsightKind, type MaterialKind } from "@/lib/schemas";
 import type { ActionResult } from "./milestones";
 
@@ -57,4 +62,33 @@ export async function setReviewPublishedAction(slug: string, publish: boolean): 
   if (!ok) return { ok: false, message: "Write the review first, then publish it." };
   refresh();
   return { ok: true };
+}
+
+export type DraftResult = { ok: true; text: string } | { ok: false; message: string };
+
+/** Drafts an email about one nudge. Recomputed on the server, so only real nudges can be drafted. Not saved. */
+export async function draftNudgeEmail(slug: string, nudgeKey: string): Promise<DraftResult> {
+  if (typeof slug !== "string" || typeof nudgeKey !== "string") return { ok: false, message: "Something's off with that request." };
+  const ipHash = hashIp(callerIp(await headers()));
+  if (await isRateLimited("rep", ipHash)) {
+    await recordCall("nudgeEmail", ipHash, "limited");
+    return { ok: false, message: BREATHER_MESSAGE };
+  }
+  const d = await getAccountDetail(slug);
+  if (!d) return { ok: false, message: "That account doesn't exist." };
+  const nudge = repNudges(d).find((n) => n.key === nudgeKey);
+  if (!nudge) return { ok: false, message: "That nudge is already resolved." };
+  try {
+    const { text, usage } = await generateText("nudgeEmail", systemBlocks(NUDGE_EMAIL_SYSTEM), nudgeEmailInput(d, nudge.rep));
+    await recordCall("nudgeEmail", ipHash, "ok", usage);
+    return { ok: true, text: noEmDash(text) };
+  } catch (err) {
+    await recordCall("nudgeEmail", ipHash, "error");
+    return { ok: false, message: err instanceof AiError ? FRIENDLY_AI_MESSAGE[err.reason] : FRIENDLY_AI_MESSAGE.api_error };
+  }
+}
+
+export async function generateRecipesAction(slug: string): Promise<ActionResult> {
+  if (typeof slug !== "string") return { ok: false, message: "Something's off with that request." };
+  return run("promptRecipes", (ip) => generatePromptRecipes(slug, ip));
 }

@@ -6,6 +6,8 @@ import { SuccessCriteriaList } from "@/components/account/success-criteria";
 import { NewAccountBanner } from "@/components/account/new-account-banner";
 import { HelpRequests } from "@/components/account/help-requests";
 import { CallHistory } from "@/components/account/call-history";
+import { NudgeList } from "@/components/account/nudge-list";
+import { repNudges } from "@/lib/nudges-for";
 import { DeleteAccount } from "@/components/account/delete-account";
 import { seedLogoId } from "@/lib/logos";
 import { daysBetween } from "@/lib/dates";
@@ -23,7 +25,8 @@ async function Overview({
   params,
   searchParams,
 }: Pick<PageProps<"/accounts/[slug]">, "params" | "searchParams">) {
-  const { account, profile, helpRequests, calls } = await loadAccount(params);
+  const detail = await loadAccount(params);
+  const { account, profile, helpRequests, calls } = detail;
   const justBuilt = (await searchParams).new === "1";
   const lastVisit = account.championLastVisitAt
     ? daysBetween(account.championLastVisitAt, new Date())
@@ -103,6 +106,7 @@ async function Overview({
         </div>
 
         <div className="space-y-6">
+          <NudgeList slug={account.slug} nudges={repNudges(detail)} />
           <HelpRequests slug={account.slug} requests={helpRequests} />
           <CallHistory calls={calls} limit={3} compact />
           <Card className="p-0">

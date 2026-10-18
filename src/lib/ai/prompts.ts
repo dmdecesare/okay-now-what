@@ -214,12 +214,18 @@ export const TOOL_INSTRUCTIONS: Record<MaterialKind, string> = {
     "Write a short check-in email from the rep to the champion: two or three highlights with numbers, one thing that needs attention, and one clear ask. Under 150 words. Don't mention spend or pricing.",
   pilot_readout:
     "Write a pilot readout the champion can take to the economic buyer. Sections: summary and recommendation, results against each success criterion (target vs actual), adoption by team, what we learned (including concerns and how they were handled), and a proposed rollout plan with next steps and dates. Be honest about criteria not yet met.",
+  exec_digest:
+    "Write the monthly update the champion forwards to their executive sponsor (for example the CIO or CTO). Under 200 words, skimmable. Sections: one-line headline; adoption this month with the trend; estimated value from the Value page (hours back and dollars, labeled as estimates); two or three wins; what's next this month; one ask of the executive, if any. Write it from the champion's point of view. No pricing, contract, renewal, health, or risk language.",
   value_summary:
     "Write a renewal and value summary for the champion to share with leadership: adoption and its trend, wins tied to their goals, what's still in progress, and three recommendations for the next year. Don't include prices.",
 };
 
 export function toolInput(kind: MaterialKind, d: AccountDetail): string {
-  return `Task: ${TOOL_INSTRUCTIONS[kind]}
+  const extra =
+    kind === "exec_digest"
+      ? `\n\n${roiLine(d)}\nDeveloper pulse: ${d.pulse.average != null ? `${d.pulse.average} out of 5 from ${d.pulse.count} answers` : "no answers yet"}. Developers on a learning path: ${d.learningLearners}.\nCompleted milestones: ${d.milestones.filter((m) => m.status === "done").map((m) => m.title).join("; ") || "none yet"}.`
+      : "";
+  return `Task: ${TOOL_INSTRUCTIONS[kind]}${extra}
 
 ${accountBasics(d)}
 
@@ -283,6 +289,36 @@ export function expansionPitchInput(d: AccountDetail): string {
 
 Growth signals:
 ${d.expansion.signals.map((s) => `  - ${s.label}: ${s.detail}`).join("\n") || "  - none"}`;
+}
+
+// ----------------------------------------------------------------------------
+// Prompt recipes (customer-facing): copy-ready Copilot Chat prompts for this team.
+// Built from customer-safe context only.
+// ----------------------------------------------------------------------------
+
+export const PROMPT_RECIPES_SYSTEM = `You write a short library of copy-ready prompts that a GitHub Copilot customer's developers paste into Copilot Chat. They appear on the customer's own success portal.
+- Write 6 to 8 recipes tailored to this company's industry, goals, and the topics their team raised. Cover a mix of tags: Understand, Write, Test, Refactor, Review, and Admin (for admins only if setup topics came up).
+- Each prompt is specific and ready to use, with [placeholders] in square brackets for the parts a developer fills in, like [file name] or [function]. Under 70 words each.
+- title: short and plain. useWhen: one line on when to reach for it.
+- Never mention internal notes, account health, risk, pricing, or contract details.
+- ${STYLE}`;
+
+export function promptRecipesInput(c: CustomerView & { concerns: string[] }): string {
+  return askContext(c);
+}
+
+// ----------------------------------------------------------------------------
+// Nudge email (rep): a short note about one thing that needs attention
+// ----------------------------------------------------------------------------
+
+export const NUDGE_EMAIL_SYSTEM = `You write a short, friendly email from a GitHub account executive to their Copilot champion about one thing that needs attention. The rep has no customer success team, so the email should make the next step easy.
+- Start with "Subject:". Plain text, under 120 words, "- " for any list.
+- Be warm and practical, never scolding. Offer one concrete way you can help, like a session, a doc, or a quick call.
+- Use the names and numbers in the data. Don't invent anything. No pricing or contract talk.
+- ${STYLE}`;
+
+export function nudgeEmailInput(d: AccountDetail, nudge: string): string {
+  return `${accountBasics(d)}\n\nWhat needs attention: ${nudge}`;
 }
 
 // ----------------------------------------------------------------------------

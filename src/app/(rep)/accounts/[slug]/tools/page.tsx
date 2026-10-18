@@ -6,6 +6,7 @@ import type { AccountProfile, MaterialKind } from "@/lib/schemas";
 import { getAccountReview, getCustomerView, getLearningForAccount } from "@/db/queries";
 import { ReviewToolCard } from "@/components/review/review-tool-card";
 import { ValueToolCard } from "@/components/review/value-tool-card";
+import { RecipesToolCard } from "@/components/review/recipes-tool-card";
 import { computeRoi } from "@/lib/roi";
 import { loadAccount } from "../load";
 
@@ -23,6 +24,7 @@ const TOOLS: Tool[] = [
     pilotOnly: true,
   },
   { kind: "value_summary", title: "Renewal and value summary", description: "Adoption, wins, and the case for renewal." },
+  { kind: "exec_digest", title: "Monthly exec digest", description: "A short monthly update the champion forwards to their executive." },
 ];
 
 /** Drafts that already exist in the champion kit, shown until Claude writes a fresh one. */
@@ -61,6 +63,7 @@ async function Tools({ params }: { params: PageProps<"/accounts/[slug]/tools">["
   return (
     <div className="space-y-6">
       <ValueToolCard slug={account.slug} token={account.customerToken} roi={roi} />
+      <RecipesToolCard slug={account.slug} token={account.customerToken} recipes={profile.promptRecipes ?? []} />
       {view && (
         <ReviewToolCard slug={account.slug} token={account.customerToken} view={view} review={review} learning={learning} />
       )}

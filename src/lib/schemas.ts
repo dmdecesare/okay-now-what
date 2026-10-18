@@ -55,6 +55,15 @@ export const guidePickSchema = z.object({
   why: z.string().describe("One line on why this matters for this customer"),
 });
 
+export const promptRecipeSchema = z.object({
+  title: z.string(),
+  useWhen: z.string().describe("One line: when a developer would use this"),
+  prompt: z.string().describe("The prompt to paste into Copilot Chat"),
+  tag: z.enum(["Understand", "Write", "Test", "Refactor", "Review", "Admin"]),
+});
+export type PromptRecipe = z.infer<typeof promptRecipeSchema>;
+export const promptRecipesSchema = z.object({ recipes: z.array(promptRecipeSchema).min(4).max(8) });
+
 export const accountProfileSchema = z.object({
   summary: z.string(),
   goals: z.array(goalSchema),
@@ -66,6 +75,8 @@ export const accountProfileSchema = z.object({
   setupSteps: z.array(setupStepSchema),
   championKit: championKitSchema,
   guides: z.array(guidePickSchema),
+  /** Copy-ready Copilot prompts for this customer, shown on their Prompts tab. */
+  promptRecipes: z.array(promptRecipeSchema).optional(),
   /** Value-report assumptions the rep can edit. Defaults apply when missing. */
   roiAssumptions: z
     .object({ hoursSavedPerWeek: z.number(), hourlyCost: z.number() })
@@ -260,5 +271,6 @@ export const MATERIAL_KINDS = [
   "checkin_email",
   "pilot_readout",
   "value_summary",
+  "exec_digest",
 ] as const;
 export type MaterialKind = (typeof MATERIAL_KINDS)[number];

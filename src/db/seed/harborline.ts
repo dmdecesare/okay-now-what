@@ -20,6 +20,14 @@ export const harborline: SeedAccount = {
   dealNotes: `call w/ Priya + 2 eng managers. they've had Cursor trial on a couple teams, mixed feelings, legal didn't love it. want one vendor. CTO wants hard numbers before buying 600 seats, PR cycle time is the metric he keeps saying. AppSec (Marcus?) worried about code leaving env + PCI scope, need clean answer on data retention. pilot = 100 seats, 4 teams (checkout, risk, mobile, internal tools). mobile team skeptical, "autocomplete on steroids." Priya wants readout deck for CTO end of pilot. timeline: decision before Q1 budget lock.`,
 
   profile: {
+    promptRecipes: [
+      { tag: "Understand", title: "Explain a checkout flow", useWhen: "You're new to a payments service or picking up someone else's code.", prompt: "Explain what [file name] does in the checkout flow. List the external calls it makes, where card data is handled, and anything that looks risky for PCI scope." },
+      { tag: "Test", title: "Tests for a payment edge case", useWhen: "Before you merge a change to payment logic.", prompt: "Write unit tests for [function] covering declined cards, duplicate submissions, currency rounding, and network timeouts. Use our existing test framework and mock [payment client]." },
+      { tag: "Refactor", title: "Untangle a risk rule", useWhen: "A fraud or risk rule has grown hard to read.", prompt: "Refactor [function] into smaller named steps without changing behavior. Keep every existing branch, and list any case where the old and new versions could differ." },
+      { tag: "Review", title: "Review a PR for data handling", useWhen: "A pull request touches cardholder or customer data.", prompt: "Review this diff for data handling issues: logging of sensitive fields, data sent to new services, and missing input validation. Point to exact lines." },
+      { tag: "Write", title: "Mobile screen from a ticket", useWhen: "Starting a new mobile screen.", prompt: "Using our existing [Kotlin/Swift] patterns in [folder], scaffold a screen for [feature] with a view model, loading and error states, and one unit test." },
+      { tag: "Understand", title: "Measure PR cycle time impact", useWhen: "You want numbers for the pilot readout.", prompt: "Look at [repo] and suggest where Copilot could shorten PR cycle time most: tests, review comments, or boilerplate. Give three concrete examples from the code." },
+    ],
     summary:
       "60-day paid pilot with 100 seats across four teams. The CTO will decide on 600 seats based on PR cycle time, and AppSec needs a clean answer on data handling before Q1 budget lock.",
     goals: [

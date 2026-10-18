@@ -38,6 +38,14 @@ export const bluestone: SeedAccount = {
   dealNotes: `Elena + CIO bought for whole eng org. big goal is modernizing legacy claims system (lots of old Java). claims team lead was skeptical from day one. Elena wants a monthly adoption update she can forward to CIO. security asked about public code filter + IP indemnity, resolved. heard Elena may be taking on a bigger reorg project in Q4, bandwidth risk. renewal in ~9 months.`,
 
   profile: {
+    promptRecipes: [
+      { tag: "Understand", title: "Explain legacy claims code", useWhen: "Working in the older Java claims system.", prompt: "Explain what [class name] does in plain English. Map out the methods that change claim state, and flag anything that depends on global state or old framework behavior." },
+      { tag: "Refactor", title: "Safely modernize legacy Java", useWhen: "Making a small, tested change to old code.", prompt: "Refactor [method] to modern Java without changing behavior. Replace raw types and long if-else chains, keep the public signature, and list tests I should run first." },
+      { tag: "Test", title: "Tests before touching old code", useWhen: "Before you change code with no tests.", prompt: "Write characterization tests for [class] that capture its current behavior, including odd edge cases, so I can refactor it safely." },
+      { tag: "Write", title: "Policy admin feature from a ticket", useWhen: "Building a new policy admin feature.", prompt: "Using the patterns in [folder], implement [feature] with validation, an audit log entry, and unit tests. Match our existing naming and error handling." },
+      { tag: "Review", title: "Review a claims PR", useWhen: "A pull request touches claims logic.", prompt: "Review this diff for behavior changes in claim calculations, missing null checks, and gaps in tests. Point to exact lines and suggest fixes." },
+      { tag: "Understand", title: "Write repo instructions", useWhen: "Setting up custom instructions for a repo.", prompt: "Draft a .github/copilot-instructions.md for [repo] describing our Java version, frameworks, naming rules, and how we write tests, in under 15 lines." },
+    ],
     summary:
       "700 seats across the whole engineering org, day 75. The big goal is modernizing the legacy Java claims system, but the claims team has dropped off and Elena may lose bandwidth to a Q4 reorg. Renewal in about nine months.",
     goals: [
