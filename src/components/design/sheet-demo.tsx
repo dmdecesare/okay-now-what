@@ -23,7 +23,7 @@ export function SheetDemo() {
           open={open === p}
           onClose={close}
           placement={p}
-          title={p === "right" ? "Ask Claude about your book" : "Ask anything about Copilot"}
+          title={p === "right" ? "Ask AI about your book" : "Ask anything about Copilot"}
           subtitle="Design preview"
         >
           <div className="space-y-3 p-4 text-sm text-ink-muted">

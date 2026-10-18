@@ -6,6 +6,8 @@ import { SuccessCriteriaList } from "@/components/account/success-criteria";
 import { NewAccountBanner } from "@/components/account/new-account-banner";
 import { HelpRequests } from "@/components/account/help-requests";
 import { CallHistory } from "@/components/account/call-history";
+import { DeleteAccount } from "@/components/account/delete-account";
+import { seedLogoId } from "@/lib/logos";
 import { daysBetween } from "@/lib/dates";
 import { loadAccount } from "./load";
 
@@ -149,6 +151,7 @@ async function Overview({
           </Card>
         </div>
       </div>
+      {!seedLogoId(account.slug) && <DeleteAccount slug={account.slug} name={account.name} />}
     </div>
   );
 }

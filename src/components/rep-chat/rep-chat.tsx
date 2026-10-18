@@ -40,7 +40,7 @@ export function RepChatProvider({ children }: { children: React.ReactNode }) {
   return <RepChatContext.Provider value={{ open, setOpen }}>{children}</RepChatContext.Provider>;
 }
 
-/** The "Ask Claude" button for the top bar. */
+/** The "Ask AI" button for the top bar. */
 export function AskClaudeButton({ className }: { className?: string }) {
   const { open, setOpen } = useRepChat();
   return (
@@ -56,7 +56,7 @@ export function AskClaudeButton({ className }: { className?: string }) {
       <span className="flex size-5 items-center justify-center rounded-md bg-gradient-to-br from-[#14b8a6] to-accent text-white">
         <Sparkles className="size-3" />
       </span>
-      <span className="max-sm:sr-only">Ask Claude</span>
+      <span className="max-sm:sr-only">Ask AI</span>
       <kbd className="hidden rounded border border-border bg-surface px-1 font-sans text-[10px] text-ink-faint lg:inline">⌘J</kbd>
     </button>
   );
@@ -111,7 +111,7 @@ export function RepChatPanel({ accounts }: { accounts: AccountRef[] }) {
           <span className="flex size-6 items-center justify-center rounded-md bg-gradient-to-br from-[#14b8a6] to-accent text-white">
             <Sparkles className="size-3.5" />
           </span>
-          Ask Claude about your book
+          Ask AI about your book
         </span>
       }
       subtitle="Answers from your accounts' live data"
@@ -192,7 +192,7 @@ export function RepChatPanel({ accounts }: { accounts: AccountRef[] }) {
   );
 }
 
-/** The bright "Ask Claude" button for the home hero. */
+/** The bright "Ask AI" button for the home hero. */
 export function HeroAskClaude() {
   const { setOpen } = useRepChat();
   return (
@@ -202,7 +202,7 @@ export function HeroAskClaude() {
       className="inline-flex h-9 items-center gap-2 rounded-lg bg-white px-3.5 text-sm font-semibold text-ink shadow-card transition-colors hover:bg-white/90"
     >
       <Sparkles className="size-4 text-accent" />
-      Ask Claude about your book
+      Ask AI about your book
     </button>
   );
 }
