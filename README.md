@@ -4,6 +4,10 @@
 
 Live app: **https://okay-now-what.vercel.app**
 
+Walkthrough video: **https://www.loom.com/share/f07a39bbb16947089f3d2ec074383cdc**
+
+Six-page overview: [docs/okay-now-what-overview.pdf](docs/okay-now-what-overview.pdf)
+
 Designed by Derek DeCesare. Built with [Claude Code](https://claude.com/claude-code).
 
 > All companies, people, usage, and spend in this app are fictional demo data. Not affiliated with GitHub.
@@ -18,17 +22,23 @@ On GitHub's mid-market team there is no customer success function. The rep who c
 
 **For the rep:** a toolkit that does the work of a CS team.
 
-- **Book of business:** a branded home with a plain-English summary of the week, *Needs attention* (risk) and *Expansion opportunities* (growth) panels, seat utilization, portfolio health, a customer activity feed, upcoming deadlines and renewals, and every account in one table.
+- **Book of business:** a branded home with a plain-English summary of the week, *Needs attention* (risk) and *Expansion opportunities* (growth) panels, seat utilization, portfolio health, open help requests, a feed of what customers are asking the AI assistant, deadlines, and every account in one table.
 - **Account pages:** a profile header with the customer's journey stage and key facts, plus tabs for overview, plan, adoption, spend, health and growth, customer questions, and tools.
 - **Brief me:** a one-page call brief with what changed, a talk track, and what to ask for.
+- **Log a call:** paste call notes, and Claude proposes updates to the account (milestones, people, dates) plus a follow-up email. The rep picks what to save.
+- **Nudges:** found automatically from the account's data (overdue or due-soon milestones, teams slow to adopt, a quiet champion, a help request waiting). Each has a Claude-drafted email.
+- **Help requests and developer pulse:** customers book a session or flag a blocker, and answer a five-second weekly pulse. Both land on the rep's account page.
 - **Expansion play:** growth signals (teams near full adoption, fast-growing usage, a pilot beating targets) turned into a pitch.
 - **Business review:** Claude writes an executive review from customer-visible data only; the rep previews it and publishes it to the customer's portal.
-- **Rep assistant:** ask Claude anything about your book from any page (⌘J). It focuses on the account you have open.
-- **Add account:** paste raw deal notes, and Claude builds the goals, people, concerns, plan, setup guide, champion kit, and the customer's portal in about 20 to 30 seconds.
+- **Ask AI:** a rep assistant for questions about the whole book, from any page (⌘J). It focuses on the account you have open.
+- **Tools:** Claude-drafted launch email, session agenda, developer FAQ, check-in email, pilot readout, value summary, and a monthly exec digest for the champion to forward. Also prompt recipes for the customer and the assumptions behind their Value page.
+- **Add account:** paste raw deal notes, and Claude builds the goals, people, concerns, plan, setup guide, champion kit, and the customer's portal in about 20 to 30 seconds. Accounts a rep creates can also be deleted.
 
 **For each customer:** a private success portal on a long random link, covering the whole journey (set up, learn, adopt, prove value, grow).
 
-- Home with their journey, goals, and what's next; a checkable plan synced with the rep; **learning paths** by role with hands-on challenges and a team leaderboard; guides; official videos; a setup guide built around their concerns; a champion kit; progress; and the published business review.
+- **Home:** their journey, goals, plan progress, and what's next, a **Heads up** card of automatic nudges, a **first-week checklist** for new developers, a weekly pulse, and **Request help**.
+- A checkable plan synced with the rep; **learning paths** by role with hands-on challenges and a team leaderboard; **prompt recipes** written for their codebase; guides; official videos; a setup guide built around their concerns; a champion kit; progress; and the published business review.
+- **Value:** a one-page report for their leadership with estimated savings, hours back, ROI, and payback, with charts.
 - An **Ask** assistant floats on every page, answers in their context, and cites official GitHub docs.
 - The customer view never shows health, risk, spend, rep notes, or the questions view.
 
@@ -41,11 +51,15 @@ On GitHub's mid-market team there is no customer success function. The rep who c
 | Next best action | Usage by team, milestones | 1 to 3 specific actions |
 | Risk explanation and recovery play | Signals plus account context | Plain-English reason and a play |
 | Question themes | Saved customer questions | Grouped summary |
-| Tools | Account context plus tool type | Editable draft (launch email, agenda, FAQ, check-in, pilot readout, value summary) |
+| Question topic | A customer's question | A topic tag, for the rep's questions view |
+| Tools | Account context plus tool type | Editable draft (launch email, agenda, FAQ, check-in, pilot readout, value summary, monthly exec digest) |
 | Rep assistant | The whole book plus the open account | Streamed answer with links to the right account tabs |
 | Call brief | Account context plus the last 14 days of changes | One-page brief: what changed, talk track, questions, asks |
 | Expansion play | Growth signals plus account context | Why now, what to propose, talking points, next step |
 | Business review | Customer-visible data plus learning progress | Executive review, published to the customer's portal |
+| Log a call | Call notes plus the account record | Proposed account updates and a follow-up email |
+| Nudge email | One nudge plus account context | A short email to the champion |
+| Prompt recipes | Customer-safe account context | 4 to 8 copy-ready Copilot prompts for their codebase |
 
 Every prompt lives in one file: [`src/lib/ai/prompts.ts`](src/lib/ai/prompts.ts). Model and effort settings live in [`src/lib/ai/config.ts`](src/lib/ai/config.ts). The app uses **Claude Sonnet 5.5** with structured outputs (Zod-validated before saving) and prompt caching.
 
@@ -58,7 +72,7 @@ Rep view        ── HTTPS ──>    Next.js server components     ──>   
 Customer view                   /api/ask      (customer answers)      Neon Postgres (via Drizzle)
                                 /api/rep-chat (rep answers)
                                 /api/accounts (builds accounts)
-                                Server actions (check-offs, briefs, reviews, learning, drafts)
+                                Server actions (check-offs, briefs, calls, nudges, reviews, drafts)
                                 Rate limits, input checks
 
 The Anthropic API key lives only in a server environment variable. It never reaches the browser.
@@ -77,7 +91,7 @@ The Anthropic API key lives only in a server environment variable. It never reac
 |---|---|
 | `npm run check` | TypeScript, ESLint, and the UI copy rule (no em dashes) |
 | `npm run check:health` | The risk and growth rules still tell the demo story |
-| `npm run check:leaks [url]` | Every customer page (11 per account), for any rep-only content. The Value page may show the customer's own dollar figures; every other rule still applies. Works against the live URL |
+| `npm run check:leaks [url]` | Every customer page (12 per account), for any rep-only content. The Value page may show the customer's own dollar figures; every other rule still applies. Works against the live URL |
 | `npm run check:links` | All 52 resource links load, stay on official GitHub sites, and match their titles. Videos come from GitHub's official channel |
 | `npm run check:secrets` | Every file and every commit in history, for keys, tokens, database passwords, and private files |
 
@@ -110,8 +124,8 @@ The local database creates and seeds itself on first run. Without an API key, ev
 ## How Claude was used
 
 - **claude.ai:** shaped the problem, the structure, and the build spec ([SPEC.md](SPEC.md)).
-- **Claude Code:** built the first version in one session across nine reviewed phases, then a second session redesigned it into a customer success platform (new design system, made-up logos, rep assistant, call briefs, expansion plays, business reviews, learning paths, and a floating Ask). It planned each phase for approval, wrote and tested the code, verified every resource link, caught that the spec's billing terms were out of date, deployed to Vercel, and ran the acceptance checklist on the live URL. The session log is in [BUILD_LOG.md](BUILD_LOG.md).
-- **Anthropic API:** powers ten live features inside the app, listed above.
+- **Claude Code:** built the first version in one session across nine reviewed phases, then a second session redesigned it into a customer success platform (new design system, made-up logos, rep assistant, call briefs, expansion plays, business reviews, learning paths, and a floating Ask). Later rounds added the rep workflow (log a call, help requests, developer pulse), the Value page, nudges, the first-week checklist, prompt recipes, and the exec digest. It planned each phase for approval, wrote and tested the code, verified every resource link, caught that the spec's billing terms were out of date, deployed to Vercel, and ran the acceptance checklist on the live URL. The session log is in [BUILD_LOG.md](BUILD_LOG.md).
+- **Anthropic API:** powers 14 live features inside the app, listed above.
 
 ## Project layout
 
